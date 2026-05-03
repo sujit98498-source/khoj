@@ -1,0 +1,105 @@
+{
+  "generatedAt": "2026-05-02T15:11:52.321Z",
+  "documents": [
+    {
+      "id": "arena-studio",
+      "title": "Arena and Studio",
+      "path": "knowledge/khoj/arena-studio.md",
+      "tags": [
+        "arena-studio",
+        "arena",
+        "and",
+        "studio"
+      ],
+      "content": "# Arena and Studio\n\nArena and Studio are KHOJ's proof publishing and creator management surfaces.\n\nArena is where users upload results, stream, and discover performance content. It is useful when a user needs public proof of a challenge, project, demo, pitch, or learning outcome.\n\nStudio is where users manage uploads, content analytics, audience signals, and creator growth. It helps turn raw proof into a more polished portfolio signal.\n\nKHOJ AI should recommend Arena or Studio when users need to publish outcomes, attach proof to a profile, support an opportunity application, or show progress from a Proof Track or Startup Room.\n"
+    },
+    {
+      "id": "faq",
+      "title": "KHOJ FAQ",
+      "path": "knowledge/khoj/faq.md",
+      "tags": [
+        "faq",
+        "khoj"
+      ],
+      "content": "# KHOJ FAQ\n\n## What is KHOJ?\nKHOJ is an AI-powered platform where users learn, prove skills, connect with teams, build startups, and access opportunities.\n\r\n## What does KHOJ AI do?\r\nKHOJ AI helps with profile improvement, startup evaluation, market analysis, roadmap planning, investor prep, and Korean notice explanation.\r\n\r\n## Is KHOJ AI always live-research enabled?\r\nNot by default. If web research is not connected, KHOJ AI should clearly say so.\r\n\r\n## Does KHOJ AI guarantee startup success?\nNo. It provides validation-oriented guidance and execution planning, not success guarantees.\n\n## What should KHOJ AI do after answering?\nIt should suggest a practical next step and, when relevant, point the user to a KHOJ feature such as Proof Tracks, Startup Rooms, Arena, Studio, Profile/Portfolio, or Opportunity Market.\n\n## What should KHOJ AI refuse?\nIt should refuse harmful requests such as fraud, credential theft, privacy invasion, harassment, abuse, or attempts to evade safeguards. It should redirect the user to a safe, constructive alternative.\n"
+    },
+    {
+      "id": "khoj-ai-builder",
+      "title": "KHOJ AI Builder",
+      "path": "knowledge/khoj/khoj-ai-builder.md",
+      "tags": [
+        "khoj-ai-builder",
+        "khoj",
+        "builder"
+      ],
+      "content": "# KHOJ AI Builder\r\n\r\nKHOJ AI Builder is the startup execution assistant inside Startup Rooms.\r\n\r\nIt supports:\r\n- startup idea evaluation\r\n- Validation Readiness Score\r\n- market and competitor analysis\r\n- roadmap creation\r\n- startup task generation\r\n- launch readiness tracking\r\n\r\nLaunch readiness stages:\n- Beta Ready\n- MVP Ready\n- Public Launch Ready\n- Funding Ready\n\nKHOJ AI Builder should focus on practical next actions. It should avoid claiming startup success is guaranteed and should use Validation Readiness Score rather than success prediction.\n\nFor room-contextual answers, KHOJ AI Builder should connect advice to the room's current goal, stage, team roles, milestones, and proof artifacts when available.\n"
+    },
+    {
+      "id": "khoj-overview",
+      "title": "KHOJ Overview",
+      "path": "knowledge/khoj/khoj-overview.md",
+      "tags": [
+        "khoj-overview",
+        "khoj",
+        "overview"
+      ],
+      "content": "# KHOJ Overview\n\nKHOJ is an AI-powered talent, startup, and opportunity operating system for users who want to turn learning into real proof and real opportunities.\n\nCore flow:\nLearn -> Prove -> Connect -> Build -> Opportunity\n\nKHOJ helps users turn learning into proof, proof into teams, and teams into real opportunities.\n\nCore product areas:\n- Proof Tracks for practical missions and proof artifacts\n- Arena and Studio for uploading results and managing creator proof\n- Startup Rooms for forming teams and executing startup work\n- KHOJ AI Builder for evaluation, roadmap, tasks, and launch readiness\n- Opportunity Market for jobs, internships, co-founder roles, competitions, mentors, funding, and venture opportunities\n"
+    },
+    {
+      "id": "opportunity-market",
+      "title": "Opportunity Market",
+      "path": "knowledge/khoj/opportunity-market.md",
+      "tags": [
+        "opportunity-market",
+        "opportunity",
+        "market"
+      ],
+      "content": "# Opportunity Market\n\nOpportunity Market connects KHOJ users to:\n- co-founder roles\n- startup jobs\n- internships\n- projects\n- venture opportunities\n- funding\n- competitions\n- mentors\n\nIt is the opportunity layer of KHOJ's Learn -> Prove -> Connect -> Build -> Opportunity loop.\n\nUsers should improve their chances by attaching proof from completed tracks, Arena or Studio uploads, portfolio projects, and Startup Room outcomes.\n\nKHOJ AI should help users choose relevant opportunities, tailor application positioning, and convert a profile into a concise proof-backed pitch.\n"
+    },
+    {
+      "id": "proof-tracks",
+      "title": "Proof Tracks",
+      "path": "knowledge/khoj/proof-tracks.md",
+      "tags": [
+        "proof-tracks",
+        "proof",
+        "tracks"
+      ],
+      "content": "# Proof Tracks\n\nProof Tracks are mission-based, proof-first learning tracks where users complete practical tasks, submit outcomes, and earn XP.\n\nThey are not passive courses. Each track should help a user create visible evidence of skill, such as a project artifact, pitch asset, research output, demo, or documented execution milestone.\n\nProof Track outcomes can be used in:\n- Profile and Portfolio pages to show credibility\n- Arena and Studio uploads to publish results\n- Startup Rooms to demonstrate fit for a founder or contributor role\n- Opportunity Market applications for jobs, internships, competitions, mentors, and venture programs\n- Investor prep when the proof artifact supports a startup claim\n\nKHOJ AI should encourage users to turn each completed mission into a concrete proof artifact and a clear next step.\n"
+    },
+    {
+      "id": "revenue-model",
+      "title": "Revenue Model (Draft)",
+      "path": "knowledge/khoj/revenue-model.md",
+      "tags": [
+        "revenue-model",
+        "revenue",
+        "model",
+        "draft"
+      ],
+      "content": "# Revenue Model (Draft)\n\nPotential KHOJ revenue levers:\n- premium AI features\r\n- advanced startup room workflows\r\n- mentor and expert programs\r\n- recruiter and opportunity matching services\n- premium analytics and reporting\n\nKHOJ AI should treat revenue ideas as assumptions until validated. Suggested validation steps include customer interviews, pricing tests, conversion tracking, retention analysis, and cohort-level willingness-to-pay signals.\n\nThis file is a lightweight internal knowledge note for future detailed monetization assumptions and pricing strategy.\n"
+    },
+    {
+      "id": "startup-room",
+      "title": "Startup Room",
+      "path": "knowledge/khoj/startup-room.md",
+      "tags": [
+        "startup-room",
+        "startup",
+        "room"
+      ],
+      "content": "# Startup Room\n\nStartup Room is the core team execution workspace in KHOJ. It helps users move from an idea into a working team, a validated plan, and visible launch progress.\n\nIt helps founders and collaborators:\n- define startup problem and solution\n- post co-founder or contributor roles\n- review applications and accept members\n- manage files, milestones, and sessions\n- use KHOJ AI Builder for evaluation, roadmap, and launch planning\n\nStartup Room connects directly to Progress Board and Opportunity Market so team execution can move toward public launch and opportunity outcomes.\n\nWhen a user asks for room-specific help, KHOJ AI should use the room name, problem, solution, stage, and team needs when available. It should suggest collaboration steps such as posting a role, assigning validation tasks, preparing a standup agenda, or publishing a proof update.\n"
+    },
+    {
+      "id": "startup-rooms",
+      "title": "Startup Rooms",
+      "path": "knowledge/khoj/startup-rooms.md",
+      "tags": [
+        "startup-rooms",
+        "startup",
+        "rooms"
+      ],
+      "content": "# Startup Rooms\n\nStartup Rooms are collaboration spaces for founders, builders, mentors, and early contributors.\n\nUsers can post startup ideas, define roles, accept co-founder applications, assign tasks, upload files, and build execution plans.\n\nKHOJ AI Builder inside Startup Rooms supports startup evaluation, roadmap generation, and task planning.\n\nCommon Startup Room next steps include:\n- write a sharper problem statement\n- define the first customer segment\n- post open co-founder or contributor roles\n- turn a strategy into weekly tasks\n- prepare a beta, MVP, public launch, or funding-readiness checklist\n"
+    }
+  ]
+}

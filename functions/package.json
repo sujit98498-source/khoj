@@ -1,0 +1,22 @@
+{
+  "name": "khoj-collaboration-functions",
+  "version": "1.0.0",
+  "description": "Firebase Cloud Functions for KHOJ Collaboration Rooms",
+  "engines": { "node": "20" },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  },
+  "private": true
+}

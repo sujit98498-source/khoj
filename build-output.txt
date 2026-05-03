@@ -1,0 +1,102 @@
+
+> khoj@0.1.0 build
+> next build
+
+  Γû▓ Next.js 14.2.3
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/61) ...
+   Generating static pages (15/61) 
+   Generating static pages (30/61) 
+   Generating static pages (45/61) 
+ Γ£ô Generating static pages (61/61)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+Γöî Γùï /                                    162 B          87.2 kB
+Γö£ Γùï /_not-found                          876 B          87.9 kB
+Γö£ Γùï /admin                               3.19 kB         227 kB
+Γö£ Γùï /admin/announcements                 4.25 kB         222 kB
+Γö£ Γùï /admin/reports                       5.18 kB         230 kB
+Γö£ Γùï /admin/results                       162 B          87.2 kB
+Γö£ Γùï /admin/tournaments                   5.74 kB         235 kB
+Γö£ Γùï /admin/verification                  7.58 kB        99.7 kB
+Γö£ ╞Æ /api/admin/payments                  0 B                0 B
+Γö£ ╞Æ /api/livekit/token                   0 B                0 B
+Γö£ ╞Æ /api/matches/submit                  0 B                0 B
+Γö£ ╞Æ /api/payments/initiate               0 B                0 B
+Γö£ ╞Æ /api/payments/mark-status            0 B                0 B
+Γö£ ╞Æ /api/payments/verify                 0 B                0 B
+Γö£ ╞Æ /api/seed                            0 B                0 B
+Γö£ ╞Æ /api/streams/token                   0 B                0 B
+Γö£ ╞Æ /api/tournaments/publish-result      0 B                0 B
+Γö£ Γùï /arena                               11.1 kB         259 kB
+Γö£ ╞Æ /arena/media/[mediaId]               6.71 kB         249 kB
+Γö£ Γùï /auth/login                          3.98 kB         229 kB
+Γö£ Γùï /auth/signup                         3.6 kB          229 kB
+Γö£ Γùï /community                           6.48 kB         254 kB
+Γö£ Γùï /community/saved                     1.39 kB         249 kB
+Γö£ Γùï /dashboard                           6.92 kB         248 kB
+Γö£ Γùï /dashboard/applications              2.9 kB          247 kB
+Γö£ Γùï /dashboard/interviews                1.9 kB          250 kB
+Γö£ Γùï /dashboard/job-alerts                3.94 kB         244 kB
+Γö£ Γùï /dashboard/saved-jobs                2.26 kB         246 kB
+Γö£ Γùï /explore                             162 B          87.2 kB
+Γö£ Γùï /jobs                                3.35 kB         248 kB
+Γö£ ╞Æ /jobs/[jobId]                        6.55 kB         255 kB
+Γö£ Γùï /leaderboard                         2.85 kB         216 kB
+Γö£ Γùï /matches                             162 B          87.2 kB
+Γö£ Γùï /messages                            3.21 kB         248 kB
+Γö£ ╞Æ /messages/[conversationId]           8.87 kB         253 kB
+Γö£ Γùï /network                             2.32 kB         239 kB
+Γö£ Γùï /network/requests                    2.04 kB         243 kB
+Γö£ Γùï /notifications                       2.84 kB         240 kB
+Γö£ Γùï /payment-failure                     2.59 kB        96.5 kB
+Γö£ Γùï /payment-success                     3.23 kB        97.1 kB
+Γö£ Γùï /profile                             3.81 kB         247 kB
+Γö£ ╞Æ /profile/[id]                        10.1 kB         269 kB
+Γö£ Γùï /recruiter                           7.76 kB         257 kB
+Γö£ Γùï /recruiter/interviews                1.95 kB         250 kB
+Γö£ Γùï /recruiter/jobs                      4.86 kB         252 kB
+Γö£ ╞Æ /recruiter/jobs/[jobId]/applicants   7.59 kB         248 kB
+Γö£ Γùï /recruiter/jobs/new                  3.42 kB         243 kB
+Γö£ Γùï /rooms                               4.11 kB         247 kB
+Γö£ ╞Æ /rooms/[id]                          18.2 kB         415 kB
+Γö£ ╞Æ /rooms/call/[conversationId]         5.15 kB         379 kB
+Γö£ Γùï /rooms/startups                      3.65 kB         246 kB
+Γö£ Γùï /settings                            162 B          87.2 kB
+Γö£ Γùï /settings/profile                    11.4 kB         257 kB
+Γö£ Γùï /streams                             2.1 kB          245 kB
+Γö£ ╞Æ /streams/[streamId]                  11.4 kB         407 kB
+Γö£ Γùï /studio                              8.75 kB         229 kB
+Γö£ Γùï /studio/analytics                    5.63 kB         226 kB
+Γö£ Γùï /studio/audience                     4.64 kB         218 kB
+Γö£ Γùï /studio/comments                     7.05 kB         232 kB
+Γö£ Γùï /studio/content                      7.78 kB         233 kB
+Γö£ Γùï /studio/earnings                     1.93 kB          89 kB
+Γö£ Γùï /studio/settings                     3.56 kB         229 kB
+Γö£ Γùï /studio/tracks                       5 kB            225 kB
+Γö£ Γùï /talent                              6.81 kB         248 kB
+Γö£ Γùï /tournaments                         3.73 kB         233 kB
+Γö£ ╞Æ /tournaments/[id]                    4.55 kB         241 kB
+Γö£ Γùï /tracks                              5.91 kB         243 kB
+Γö£ ╞Æ /tracks/[trackId]                    9.52 kB         246 kB
+Γö£ ╞Æ /tracks/[trackId]/learn/[lessonId]   6.69 kB         232 kB
+Γö£ ╞Æ /tracks/[trackId]/manage             7.94 kB         245 kB
+Γöö Γùï /tracks/create                       8.3 kB          245 kB
++ First Load JS shared by all            87.1 kB
+  Γö£ chunks/7023-e451fdf817fcaffc.js      31.5 kB
+  Γö£ chunks/fd9d1056-383a382aa01e49c8.js  53.6 kB
+  Γöö other shared chunks (total)          1.97 kB
+
+
+╞Æ Middleware                             26.1 kB
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

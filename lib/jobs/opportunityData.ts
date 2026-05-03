@@ -1,0 +1,218 @@
+// lib/jobs/opportunityData.ts
+// Static placeholder data for the Opportunity Market non-jobs tabs.
+// Replace with live Firestore queries once the `opportunities` collection is seeded.
+
+import type { Opportunity } from '@/lib/types'
+
+export const PLACEHOLDER_OPPORTUNITIES: Opportunity[] = [
+  // ── Co-founder roles ─────────────────────────────────────────────────────
+  {
+    id: 'opp_cf_1',
+    type: 'cofounder',
+    title: 'Technical Co-founder for EdTech Startup',
+    description:
+      'We\'re building an AI-powered tutoring platform for Nepali students. Looking for a CTO-level co-founder to own the backend + ML pipeline. Equity split negotiable.',
+    postedBy: 'user_demo_1',
+    postedByName: 'Aarav Shrestha',
+    category: 'Coding',
+    skillsRequired: ['Next.js', 'Python', 'ML / AI', 'Firebase'],
+    remoteAllowed: true,
+    compensationType: 'equity',
+    equityRange: '20–35%',
+    status: 'open',
+    startupName: 'KrishiLearn',
+    startupStage: 'mvp',
+    weeklyCommitment: '20–30 hrs / week',
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'opp_cf_2',
+    type: 'cofounder',
+    title: 'Design Co-founder – FinTech Mobile App',
+    description:
+      'Remittance app targeting Nepali diaspora. We have a working prototype and early traction. Need a product/design co-founder to lead UX strategy.',
+    postedBy: 'user_demo_2',
+    postedByName: 'Priya Tamang',
+    category: 'Design',
+    skillsRequired: ['Figma', 'Product Strategy', 'User Research', 'Mobile UX'],
+    remoteAllowed: true,
+    compensationType: 'equity',
+    equityRange: '15–25%',
+    status: 'open',
+    startupName: 'PaisaGhar',
+    startupStage: 'traction',
+    weeklyCommitment: 'Full-time',
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'opp_cf_3',
+    type: 'cofounder',
+    title: 'Marketing Co-founder – Gaming Platform',
+    description:
+      'E-sports tournament platform for South Asia. Pre-seed funded. Looking for a growth-focused co-founder to lead community building and user acquisition.',
+    postedBy: 'user_demo_3',
+    postedByName: 'Rohan Gurung',
+    category: 'Marketing',
+    skillsRequired: ['Growth Marketing', 'Community Building', 'Social Media', 'Analytics'],
+    remoteAllowed: true,
+    compensationType: 'equity',
+    equityRange: '10–20%',
+    status: 'open',
+    startupName: 'ArenaX',
+    startupStage: 'mvp',
+    weeklyCommitment: '25+ hrs / week',
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // ── Internships ──────────────────────────────────────────────────────────
+  {
+    id: 'opp_int_1',
+    type: 'internship',
+    title: 'Frontend Engineering Intern',
+    description:
+      'Join our startup team building a next-gen project management tool. You\'ll work directly with the founding team on React + Next.js features shipped to real users.',
+    postedBy: 'user_demo_4',
+    postedByName: 'SaralWork Startup',
+    category: 'Coding',
+    skillsRequired: ['React', 'TypeScript', 'Tailwind CSS'],
+    remoteAllowed: true,
+    compensationType: 'stipend',
+    location: 'Remote',
+    durationWeeks: 12,
+    status: 'open',
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'opp_int_2',
+    type: 'internship',
+    title: 'Product Design Intern',
+    description:
+      'We\'re an early-stage healthtech startup. You\'ll own end-to-end design of patient-facing features — from wireframes to polished Figma prototypes.',
+    postedBy: 'user_demo_5',
+    postedByName: 'HealthBridge Nepal',
+    category: 'Design',
+    skillsRequired: ['Figma', 'UI Design', 'Prototyping'],
+    remoteAllowed: false,
+    compensationType: 'unpaid',
+    location: 'Kathmandu, Nepal',
+    durationWeeks: 8,
+    status: 'open',
+    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // ── Open-source / Projects ───────────────────────────────────────────────
+  {
+    id: 'opp_proj_1',
+    type: 'project',
+    title: 'Contribute to Open-Source Job Board CLI',
+    description:
+      'Building a CLI tool to scrape and aggregate job listings from Nepali tech companies. Looking for contributors comfortable with Node.js and GitHub Actions CI/CD.',
+    postedBy: 'user_demo_6',
+    postedByName: 'Biplab KC',
+    category: 'Coding',
+    skillsRequired: ['Node.js', 'CLI', 'GitHub Actions', 'TypeScript'],
+    remoteAllowed: true,
+    compensationType: 'unpaid',
+    status: 'open',
+    teamSize: '3–5 contributors',
+    deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'opp_proj_2',
+    type: 'project',
+    title: 'Design System for Nepal Gov Open-Data Portal',
+    description:
+      'Volunteer project to build a modern design system for an open-data portal. Join the civic tech community and ship something that matters.',
+    postedBy: 'user_demo_7',
+    postedByName: 'OpenNepal Collective',
+    category: 'Design',
+    skillsRequired: ['Figma', 'Design Tokens', 'Accessibility'],
+    remoteAllowed: true,
+    compensationType: 'unpaid',
+    status: 'open',
+    teamSize: '2–4 designers',
+    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // ── Funding opportunities ─────────────────────────────────────────────────
+  {
+    id: 'opp_fund_1',
+    type: 'funding',
+    title: 'Seed Round — AgriTech Drone Platform',
+    description:
+      'Raising NPR 1.5 Cr seed round for our autonomous agricultural drone service. We\'ve completed pilots with 12 farms. Looking for angel investors and seed funds.',
+    postedBy: 'user_demo_8',
+    postedByName: 'KrishiDrone Labs',
+    category: 'Startups',
+    skillsRequired: [],
+    compensationType: 'equity',
+    status: 'open',
+    startupStage: 'traction',
+    fundingNeeded: 'NPR 1.5 Cr',
+    useOfFunds: 'Drone fleet expansion, regulatory approvals, 3 pilot districts',
+    traction: '12 farms onboarded, 40 acres covered, NPR 8L revenue in 6 months',
+    createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'opp_fund_2',
+    type: 'funding',
+    title: 'Pre-Seed — Mental Health App for Students',
+    description:
+      'Building Nepal\'s first anonymous mental health support app for university students. Seeking pre-seed investment of $25k USD.',
+    postedBy: 'user_demo_9',
+    postedByName: 'MindSpace Nepal',
+    category: 'Product',
+    skillsRequired: [],
+    compensationType: 'equity',
+    status: 'open',
+    startupStage: 'mvp',
+    fundingNeeded: '$25,000 USD',
+    useOfFunds: 'App development, licensed counsellors, university partnerships',
+    traction: '200 beta users, 4.8/5 avg session rating',
+    createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // ── Mentors ───────────────────────────────────────────────────────────────
+  {
+    id: 'opp_ment_1',
+    type: 'mentor',
+    title: 'Seeking React / Next.js Mentor — Beginner to Job-Ready',
+    description:
+      'I\'m a self-taught developer looking for a mentor to help me go from basic React to production-ready Next.js apps over 2 months. Can do 2 sessions/week.',
+    postedBy: 'user_demo_10',
+    postedByName: 'Sanjay Adhikari',
+    category: 'Coding',
+    skillsRequired: ['React', 'Next.js', 'TypeScript'],
+    remoteAllowed: true,
+    compensationType: 'paid',
+    durationWeeks: 8,
+    status: 'open',
+    createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'opp_ment_2',
+    type: 'mentor',
+    title: 'Design Career Mentor — UX Portfolio Review',
+    description:
+      'Recent graduate looking for a senior UX/product designer to review my portfolio and provide guidance on breaking into the industry. 1–2 sessions per month.',
+    postedBy: 'user_demo_11',
+    postedByName: 'Anita Rai',
+    category: 'Design',
+    skillsRequired: ['UX Design', 'Portfolio Review', 'Career Coaching'],
+    remoteAllowed: true,
+    compensationType: 'unpaid',
+    durationWeeks: 6,
+    status: 'open',
+    createdAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+]
+
+export const PLACEHOLDER_BY_TYPE = {
+  cofounder:   PLACEHOLDER_OPPORTUNITIES.filter((o) => o.type === 'cofounder'),
+  internship:  PLACEHOLDER_OPPORTUNITIES.filter((o) => o.type === 'internship'),
+  project:     PLACEHOLDER_OPPORTUNITIES.filter((o) => o.type === 'project'),
+  funding:     PLACEHOLDER_OPPORTUNITIES.filter((o) => o.type === 'funding'),
+  mentor:      PLACEHOLDER_OPPORTUNITIES.filter((o) => o.type === 'mentor'),
+  competition: PLACEHOLDER_OPPORTUNITIES.filter((o) => o.type === 'competition'),
+} as const
