@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Remove/protect before public launch. This route must never return secret values.
+
 function isPresent(name: string): boolean {
   const value = process.env[name]?.trim() ?? ''
   const normalized = value.toLowerCase()
@@ -45,6 +47,7 @@ export async function GET(req: NextRequest) {
     openaiKey: isPresent('OPENAI_API_KEY'),
     khojAiModel: isPresent('KHOJ_AI_MODEL'),
     livekitUrl: isPresent('NEXT_PUBLIC_LIVEKIT_URL'),
+    livekitServerKeys: isPresent('LIVEKIT_API_KEY') && isPresent('LIVEKIT_API_SECRET'),
     livekitApiKey: isPresent('LIVEKIT_API_KEY'),
     livekitApiSecret: isPresent('LIVEKIT_API_SECRET'),
     appUrl: isPresent('NEXT_PUBLIC_APP_URL'),
