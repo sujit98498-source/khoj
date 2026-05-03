@@ -18,12 +18,21 @@ const REQUIRED_FIREBASE_ENV = [
 
 type FirebaseEnvName = (typeof REQUIRED_FIREBASE_ENV)[number]
 
-function readPublicEnv(name: FirebaseEnvName): string {
-  const value = process.env[name]?.trim() ?? ''
-  const normalized = value.toLowerCase()
+const rawFirebaseEnv: Record<FirebaseEnvName, string | undefined> = {
+  NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+}
+
+function readPublicEnvValue(value: string | undefined): string {
+  const normalizedValue = value?.trim() ?? ''
+  const normalized = normalizedValue.toLowerCase()
 
   if (
-    !value ||
+    !normalizedValue ||
     normalized === 'undefined' ||
     normalized === 'null' ||
     normalized.includes('your-') ||
@@ -33,12 +42,23 @@ function readPublicEnv(name: FirebaseEnvName): string {
     return ''
   }
 
-  return value
+  return normalizedValue
 }
 
-const firebaseEnv = Object.fromEntries(
-  REQUIRED_FIREBASE_ENV.map((name) => [name, readPublicEnv(name)])
-) as Record<FirebaseEnvName, string>
+const firebaseEnv = {
+  NEXT_PUBLIC_FIREBASE_API_KEY: readPublicEnvValue(rawFirebaseEnv.NEXT_PUBLIC_FIREBASE_API_KEY),
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: readPublicEnvValue(rawFirebaseEnv.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN),
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: readPublicEnvValue(rawFirebaseEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: readPublicEnvValue(rawFirebaseEnv.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET),
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: readPublicEnvValue(rawFirebaseEnv.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID),
+  NEXT_PUBLIC_FIREBASE_APP_ID: readPublicEnvValue(rawFirebaseEnv.NEXT_PUBLIC_FIREBASE_APP_ID),
+} satisfies Record<FirebaseEnvName, string>
+
+/*
+ * Do not replace the direct process.env.NEXT_PUBLIC_* reads above with
+ * process.env[name]. Next.js only inlines direct public env references into
+ * browser bundles, and Firebase Auth must initialize in the browser.
+ */
 
 const missingFirebaseEnv = REQUIRED_FIREBASE_ENV.filter((name) => !firebaseEnv[name])
 
