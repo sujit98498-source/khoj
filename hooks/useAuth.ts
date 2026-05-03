@@ -26,6 +26,16 @@ export function useAuth(): AuthState {
   })
 
   useEffect(() => {
+    if (!auth) {
+      setState({
+        firebaseUser: null,
+        khojUser: null,
+        loading: false,
+        isAuthenticated: false,
+      })
+      return
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Fetch Firestore profile — catch Firestore errors so loading never hangs

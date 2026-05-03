@@ -19,7 +19,7 @@ import {
   limit,
   onSnapshot,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { Notification } from '@/lib/types'
 import {
@@ -40,7 +40,7 @@ export function useNotifications(userId: string | null) {
     // Composite index required: notifications → userId ASC, createdAt DESC
     // Deploy firestore.indexes.json (at project root) or create manually in Firebase console.
     const q = query(
-      collection(db, COLLECTIONS.NOTIFICATIONS),
+      collection(requireFirestoreDb(), COLLECTIONS.NOTIFICATIONS),
       where('userId', '==', userId),
       orderBy('createdAt', 'desc'),
       limit(20)

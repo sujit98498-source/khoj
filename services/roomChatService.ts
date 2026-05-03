@@ -7,7 +7,7 @@ import {
   setDoc,
   where,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 
 export interface RoomMessage {
@@ -75,7 +75,7 @@ export async function sendRoomMessage(input: {
   window.dispatchEvent(new CustomEvent(CHAT_EVENT, { detail: { roomId: input.roomId } }))
 
   try {
-    await setDoc(doc(db, COLLECTIONS.ROOM_MESSAGES, message.id), message)
+    await setDoc(doc(requireFirestoreDb(), COLLECTIONS.ROOM_MESSAGES, message.id), message)
   } catch (error) {
     console.error('Failed to persist room message to Firestore:', error)
   }
@@ -95,7 +95,7 @@ export function subscribeToRoomMessages(roomId: string, onChange: (messages: Roo
 
   try {
     const messagesQuery = query(
-      collection(db, COLLECTIONS.ROOM_MESSAGES),
+      collection(requireFirestoreDb(), COLLECTIONS.ROOM_MESSAGES),
       where('roomId', '==', roomId),
       orderBy('createdAt', 'asc')
     )

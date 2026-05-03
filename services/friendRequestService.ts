@@ -22,7 +22,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { createNotification } from '@/services/notificationService'
 import type { FriendRequest, FriendRequestStatus, Friendship } from '@/lib/types'
@@ -97,7 +97,7 @@ export async function sendFriendRequest(
   const alreadyFriends = await areFriends(from.uid, to.uid)
   if (alreadyFriends) throw new Error('Already connected')
 
-  const ref = await addDoc(collection(db, COLLECTIONS.FRIEND_REQUESTS), {
+  const ref = await addDoc(collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS), {
     fromUserId: from.uid,
     fromUserName: from.name,
     fromUserAvatar: from.avatar ?? null,
@@ -127,7 +127,7 @@ export async function sendFriendRequest(
  * Cancel a sent request (by the sender).
  */
 export async function cancelFriendRequest(requestId: string): Promise<void> {
-  await deleteDoc(doc(db, COLLECTIONS.FRIEND_REQUESTS, requestId))
+  await deleteDoc(doc(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS, requestId))
 }
 
 /**
@@ -138,7 +138,7 @@ export async function acceptFriendRequest(
   requestId: string,
   acceptorUid: string
 ): Promise<void> {
-  const reqRef = doc(db, COLLECTIONS.FRIEND_REQUESTS, requestId)
+  const reqRef = doc(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS, requestId)
   const reqSnap = await getDoc(reqRef)
   if (!reqSnap.exists()) throw new Error('Request not found')
 
@@ -148,7 +148,7 @@ export async function acceptFriendRequest(
 
   // Create friendship document
   const friendshipId = `friends_${[d.fromUserId, d.toUserId].sort().join('_')}`
-  await setDoc(doc(db, COLLECTIONS.FRIENDS, friendshipId), {
+  await setDoc(doc(requireFirestoreDb(), COLLECTIONS.FRIENDS, friendshipId), {
     userIds: [d.fromUserId, d.toUserId],
     userNames: { [d.fromUserId]: d.fromUserName, [d.toUserId]: d.toUserName },
     userAvatars: { [d.fromUserId]: d.fromUserAvatar ?? '', [d.toUserId]: d.toUserAvatar ?? '' },
@@ -158,14 +158,14 @@ export async function acceptFriendRequest(
 
   const now = serverTimestamp()
   await Promise.all([
-    setDoc(doc(db, 'users', d.fromUserId, 'connections', d.toUserId), {
+    setDoc(doc(requireFirestoreDb(), 'users', d.fromUserId, 'connections', d.toUserId), {
       uid: d.toUserId,
       name: d.toUserName,
       username: d.toUserUsername ?? '',
       avatarUrl: d.toUserAvatar ?? '',
       connectedAt: now,
     }),
-    setDoc(doc(db, 'users', d.toUserId, 'connections', d.fromUserId), {
+    setDoc(doc(requireFirestoreDb(), 'users', d.toUserId, 'connections', d.fromUserId), {
       uid: d.fromUserId,
       name: d.fromUserName,
       username: d.fromUserUsername ?? '',
@@ -191,7 +191,7 @@ export async function acceptFriendRequest(
  * Decline a received friend request.
  */
 export async function declineFriendRequest(requestId: string): Promise<void> {
-  await updateDoc(doc(db, COLLECTIONS.FRIEND_REQUESTS, requestId), {
+  await updateDoc(doc(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS, requestId), {
     status: 'declined',
     updatedAt: serverTimestamp(),
   })
@@ -203,9 +203,9 @@ export async function declineFriendRequest(requestId: string): Promise<void> {
 export async function removeFriend(uid1: string, uid2: string): Promise<void> {
   const friendshipId = `friends_${[uid1, uid2].sort().join('_')}`
   await Promise.all([
-    deleteDoc(doc(db, COLLECTIONS.FRIENDS, friendshipId)),
-    deleteDoc(doc(db, 'users', uid1, 'connections', uid2)),
-    deleteDoc(doc(db, 'users', uid2, 'connections', uid1)),
+    deleteDoc(doc(requireFirestoreDb(), COLLECTIONS.FRIENDS, friendshipId)),
+    deleteDoc(doc(requireFirestoreDb(), 'users', uid1, 'connections', uid2)),
+    deleteDoc(doc(requireFirestoreDb(), 'users', uid2, 'connections', uid1)),
   ])
 }
 
@@ -219,12 +219,12 @@ export async function getFriendRequestBetween(
   uid2: string
 ): Promise<FriendRequest | null> {
   const q1 = query(
-    collection(db, COLLECTIONS.FRIEND_REQUESTS),
+    collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
     where('fromUserId', '==', uid1),
     where('toUserId', '==', uid2)
   )
   const q2 = query(
-    collection(db, COLLECTIONS.FRIEND_REQUESTS),
+    collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
     where('fromUserId', '==', uid2),
     where('toUserId', '==', uid1)
   )
@@ -244,7 +244,7 @@ export async function getFriendRequestBetween(
  */
 export async function areFriends(uid1: string, uid2: string): Promise<boolean> {
   const friendshipId = `friends_${[uid1, uid2].sort().join('_')}`
-  const snap = await getDoc(doc(db, COLLECTIONS.FRIENDS, friendshipId))
+  const snap = await getDoc(doc(requireFirestoreDb(), COLLECTIONS.FRIENDS, friendshipId))
   return snap.exists()
 }
 
@@ -253,7 +253,7 @@ export async function areFriends(uid1: string, uid2: string): Promise<boolean> {
  */
 export async function getIncomingRequests(userId: string): Promise<FriendRequest[]> {
   const q = query(
-    collection(db, COLLECTIONS.FRIEND_REQUESTS),
+    collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
     where('toUserId', '==', userId),
     where('status', '==', 'pending')
   )
@@ -266,7 +266,7 @@ export async function getIncomingRequests(userId: string): Promise<FriendRequest
  */
 export async function getSentRequests(userId: string): Promise<FriendRequest[]> {
   const q = query(
-    collection(db, COLLECTIONS.FRIEND_REQUESTS),
+    collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
     where('fromUserId', '==', userId),
     where('status', '==', 'pending')
   )
@@ -279,7 +279,7 @@ export async function getSentRequests(userId: string): Promise<FriendRequest[]> 
  */
 export async function getFriends(userId: string): Promise<Friendship[]> {
   const q = query(
-    collection(db, COLLECTIONS.FRIENDS),
+    collection(requireFirestoreDb(), COLLECTIONS.FRIENDS),
     where('userIds', 'array-contains', userId)
   )
   const snap = await getDocs(q)

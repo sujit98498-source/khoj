@@ -28,7 +28,7 @@ import {
   Timestamp,
   writeBatch,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS, subCollections } from '@/lib/firebase/collections'
 import { getUserById } from '@/services/userService'
 import type { Conversation, DirectMessage, MessageParticipant } from '@/lib/types'
@@ -61,7 +61,7 @@ export async function getOrCreateConversation(
   recipient: MessageParticipant
 ): Promise<Conversation> {
   const id = buildConversationId(sender.uid, recipient.uid)
-  const ref = doc(db, COLLECTIONS.CONVERSATIONS, id)
+  const ref = doc(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS, id)
   const snap = await getDoc(ref)
 
   if (snap.exists()) {
@@ -110,7 +110,7 @@ export async function getOrCreateConversation(
  * Defaults participants / participantIds to [] so callers never crash on missing fields.
  */
 export async function getConversation(id: string): Promise<Conversation | null> {
-  const snap = await getDoc(doc(db, COLLECTIONS.CONVERSATIONS, id))
+  const snap = await getDoc(doc(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS, id))
   if (!snap.exists()) return null
   const d = snap.data()
   return {
@@ -146,8 +146,8 @@ export async function sendMessage(
   const trimmed = text.trim()
   if (!trimmed) return
 
-  const convoRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId)
-  const msgsRef = collection(db, subCollections.messages(conversationId))
+  const convoRef = doc(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS, conversationId)
+  const msgsRef = collection(requireFirestoreDb(), subCollections.messages(conversationId))
 
   // Derive UIDs from the deterministic conversation ID as a fallback.
   // Format: conv_<uid1>_<uid2>  (Firebase UIDs are alphanumeric — no underscores)
@@ -264,8 +264,8 @@ export async function markConversationRead(
   uid: string
 ): Promise<void> {
   try {
-    const convoRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId)
-    const msgsRef = collection(db, subCollections.messages(conversationId))
+    const convoRef = doc(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS, conversationId)
+    const msgsRef = collection(requireFirestoreDb(), subCollections.messages(conversationId))
 
     // Find messages not yet read by this user
     const msgsSnap = await getDocs(msgsRef)
@@ -275,7 +275,7 @@ export async function markConversationRead(
     })
 
     if (unread.length > 0) {
-      const batch = writeBatch(db)
+      const batch = writeBatch(requireFirestoreDb())
       unread.forEach((d) => batch.update(d.ref, { readBy: arrayUnion(uid) }))
       await batch.commit()
     }
@@ -334,7 +334,7 @@ export function getOtherParticipant(
 export async function getTotalUnread(userId: string): Promise<number> {
   try {
     const q = query(
-      collection(db, COLLECTIONS.CONVERSATIONS),
+      collection(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS),
       where('participantIds', 'array-contains', userId)
     )
     const snap = await getDocs(q)
@@ -360,7 +360,7 @@ export async function setTyping(
   uid: string,
   isTyping: boolean
 ): Promise<void> {
-  const convoRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId)
+  const convoRef = doc(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS, conversationId)
   const update = isTyping
     ? { [`typing.${uid}`]: serverTimestamp() }
     : { [`typing.${uid}`]: deleteField() }
@@ -372,7 +372,7 @@ export async function setTyping(
  * Used to power online/offline presence indicators.
  */
 export async function updatePresence(uid: string): Promise<void> {
-  const userRef = doc(db, 'users', uid)
+  const userRef = doc(requireFirestoreDb(), 'users', uid)
   await updateDoc(userRef, { lastActive: serverTimestamp() }).catch(() => {})
 }
 
@@ -403,19 +403,19 @@ export async function repairConversationParticipants(
   try {
     // Scope the query to conversations this user participates in
     const q = query(
-      collection(db, COLLECTIONS.CONVERSATIONS),
+      collection(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS),
       where('participantIds', 'array-contains', uid)
     )
     const snap = await getDocs(q)
     result.total = snap.size
 
     // Batch state — flushed every 490 ops to stay under Firestore's 500-op limit
-    let currentBatch = writeBatch(db)
+    let currentBatch = writeBatch(requireFirestoreDb())
     let opsInBatch = 0
     const flushBatch = async () => {
       if (opsInBatch > 0) {
         await currentBatch.commit()
-        currentBatch = writeBatch(db)
+        currentBatch = writeBatch(requireFirestoreDb())
         opsInBatch = 0
       }
     }

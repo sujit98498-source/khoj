@@ -248,7 +248,7 @@ export function KhojAssistantChat({
     setLoading(true)
 
     try {
-      const user = auth.currentUser
+      const user = auth?.currentUser
       if (!user) throw new Error('Please sign in to use KHOJ AI.')
       const token = await user.getIdToken()
 

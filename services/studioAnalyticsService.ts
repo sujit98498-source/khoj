@@ -19,7 +19,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -127,7 +127,7 @@ async function emitEvent(
   viewerId?: string,
 ): Promise<void> {
   try {
-    await addDoc(collection(db, 'analyticsEvents'), {
+    await addDoc(collection(requireFirestoreDb(), 'analyticsEvents'), {
       creatorId,
       contentId,
       contentType,
@@ -151,12 +151,12 @@ export function trackView(
 ): void {
   // Fire and forget
   emitEvent(creatorId, contentId, contentType, 'view', 1, viewerId)
-  updateDoc(doc(db, 'creatorStats', creatorId), {
+  updateDoc(doc(requireFirestoreDb(), 'creatorStats', creatorId), {
     totalViews: increment(1),
   }).catch(() => {
     // First view for this creator — doc may not exist yet
     setDoc(
-      doc(db, 'creatorStats', creatorId),
+      doc(requireFirestoreDb(), 'creatorStats', creatorId),
       { totalViews: 1, totalLikes: 0, totalUploads: 0, totalVideos: 0, totalClips: 0,
         totalStreams: 0, totalWatchTimeSeconds: 0, totalFollowers: 0, liveHours: 0,
         profileViews: 0, updatedAt: serverTimestamp() },
@@ -173,7 +173,7 @@ export function trackLike(
   liked: boolean,
 ): void {
   emitEvent(creatorId, contentId, contentType, 'like', liked ? 1 : -1)
-  updateDoc(doc(db, 'creatorStats', creatorId), {
+  updateDoc(doc(requireFirestoreDb(), 'creatorStats', creatorId), {
     totalLikes: increment(liked ? 1 : -1),
   }).catch(console.warn)
 }
@@ -186,7 +186,7 @@ export function trackShare(
 ): void {
   emitEvent(creatorId, contentId, contentType, 'share', 1)
   // Also increment media.shares
-  updateDoc(doc(db, 'media', contentId), {
+  updateDoc(doc(requireFirestoreDb(), 'media', contentId), {
     shares: increment(1),
   }).catch(console.warn)
 }
@@ -210,10 +210,10 @@ export function trackWatchTime(
 ): void {
   if (seconds <= 0) return
   emitEvent(creatorId, contentId, contentType, 'watch_time', seconds)
-  updateDoc(doc(db, 'media', contentId), {
+  updateDoc(doc(requireFirestoreDb(), 'media', contentId), {
     watchTimeSeconds: increment(seconds),
   }).catch(console.warn)
-  updateDoc(doc(db, 'creatorStats', creatorId), {
+  updateDoc(doc(requireFirestoreDb(), 'creatorStats', creatorId), {
     totalWatchTimeSeconds: increment(seconds),
   }).catch(console.warn)
 }
@@ -221,7 +221,7 @@ export function trackWatchTime(
 /** Called when a live stream ends. Adds liveHours to creatorStats. */
 export function trackLiveHours(creatorId: string, liveHours: number): void {
   if (liveHours <= 0) return
-  updateDoc(doc(db, 'creatorStats', creatorId), {
+  updateDoc(doc(requireFirestoreDb(), 'creatorStats', creatorId), {
     liveHours: increment(liveHours),
     totalStreams: increment(1),
   }).catch(console.warn)
@@ -229,7 +229,7 @@ export function trackLiveHours(creatorId: string, liveHours: number): void {
 
 /** Increment creatorStats.totalUploads when content is published. */
 export function trackUpload(creatorId: string, type: 'video' | 'clip'): void {
-  updateDoc(doc(db, 'creatorStats', creatorId), {
+  updateDoc(doc(requireFirestoreDb(), 'creatorStats', creatorId), {
     totalUploads: increment(1),
     ...(type === 'video' ? { totalVideos: increment(1) } : { totalClips: increment(1) }),
   }).catch(console.warn)
@@ -249,7 +249,7 @@ export function subscribeCreatorStats(
   callback: (stats: CreatorStats) => void,
 ): () => void {
   return onSnapshot(
-    doc(db, 'creatorStats', creatorId),
+    doc(requireFirestoreDb(), 'creatorStats', creatorId),
     (snap) => {
       if (!snap.exists()) { callback(DEFAULT_STATS); return }
       const d = snap.data() as Record<string, unknown>
@@ -283,7 +283,7 @@ export function subscribeStudioContent(
   callback: (items: StudioMediaItem[]) => void,
 ): () => void {
   const q = query(
-    collection(db, 'media'),
+    collection(requireFirestoreDb(), 'media'),
     where('creatorId', '==', creatorId),
     orderBy('createdAt', 'desc'),
     limit(100),
@@ -302,7 +302,7 @@ export function subscribeStudioContent(
 
 /** Soft-delete: set status to 'deleted'. Hides from Arena, stays in Studio as deleted. */
 export async function softDeleteMedia(mediaId: string): Promise<void> {
-  await updateDoc(doc(db, 'media', mediaId), {
+  await updateDoc(doc(requireFirestoreDb(), 'media', mediaId), {
     status: 'deleted',
     updatedAt: serverTimestamp(),
   })
@@ -315,7 +315,7 @@ export async function getTopContent(
   limitCount = 5,
 ): Promise<StudioMediaItem[]> {
   const q = query(
-    collection(db, 'media'),
+    collection(requireFirestoreDb(), 'media'),
     where('creatorId', '==', creatorId),
     where('status', '==', 'published'),
     orderBy('views', 'desc'),
@@ -341,7 +341,7 @@ export async function getViewsByDay(
   since.setDate(since.getDate() - days)
 
   const q = query(
-    collection(db, 'analyticsEvents'),
+    collection(requireFirestoreDb(), 'analyticsEvents'),
     where('creatorId', '==', creatorId),
     where('eventType', 'in', ['view', 'watch_time']),
     where('createdAt', '>=', Timestamp.fromDate(since)),
@@ -380,7 +380,7 @@ export function subscribeOpportunityInsights(
   callback: (items: OpportunityInsight[]) => void,
 ): () => void {
   const q = query(
-    collection(db, 'opportunityInsights', creatorId, 'items'),
+    collection(requireFirestoreDb(), 'opportunityInsights', creatorId, 'items'),
     orderBy('createdAt', 'desc'),
     limit(10),
   )

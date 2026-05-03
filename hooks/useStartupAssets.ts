@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react'
 import { subscribeRoomAssets } from '@/lib/collaboration/roomQueries'
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLAB_COLLECTIONS as C } from '@/lib/collaboration/collabCollections'
 import {
   uploadRoomAsset,
@@ -42,7 +42,7 @@ export function useStartupAssets(roomId: string, enabled: boolean) {
 
     try {
       // Create the Firestore doc first to get the assetId
-      const assetRef = await addDoc(collection(db, C.ROOMS, roomId, C.ASSETS), {
+      const assetRef = await addDoc(collection(requireFirestoreDb(), C.ROOMS, roomId, C.ASSETS), {
         assetType: inferAssetType(file),
         name: file.name,
         contentType: file.type,
@@ -55,7 +55,7 @@ export function useStartupAssets(roomId: string, enabled: boolean) {
       const result = await uploadRoomAsset(roomId, assetRef.id, file, setProgress)
 
       // Update the Firestore doc with the storage path and external URL
-      await updateDoc(doc(db, C.ROOMS, roomId, C.ASSETS, assetRef.id), {
+      await updateDoc(doc(requireFirestoreDb(), C.ROOMS, roomId, C.ASSETS, assetRef.id), {
         storagePath: result.storagePath,
         externalUrl: result.downloadUrl,
       })

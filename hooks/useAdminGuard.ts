@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
-import { auth, db } from '@/lib/firebase/config'
+import { auth, requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { KhojUser } from '@/lib/types'
 
@@ -23,6 +23,13 @@ export function useAdminGuard(): AdminGuardState {
   useEffect(() => {
     let isActive = true
 
+    if (!auth) {
+      setState({ status: 'unauthorized', user: null })
+      return () => {
+        isActive = false
+      }
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!isActive) return
 
@@ -37,7 +44,7 @@ export function useAdminGuard(): AdminGuardState {
       try {
         console.log('UID:', user.uid)
 
-        const userRef = doc(db, COLLECTIONS.USERS, user.uid)
+        const userRef = doc(requireFirestoreDb(), COLLECTIONS.USERS, user.uid)
         const userSnap = await getDoc(userRef)
 
         if (!isActive) return

@@ -31,7 +31,7 @@ import {
 import { getUserById } from '@/services/userService'
 import { createNotification } from '@/services/notificationService'
 import { doc, updateDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -160,7 +160,7 @@ export default function ConversationPage() {
             setConversation(enriched)
             // Persist back to Firestore so the conversation list also shows the
             // correct name without waiting for the background useConversations repair
-            updateDoc(doc(db, COLLECTIONS.CONVERSATIONS, conversationId), {
+            updateDoc(doc(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS, conversationId), {
               participants: enrichedParticipants,
             }).catch(() => {})
             return

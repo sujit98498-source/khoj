@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import toast from 'react-hot-toast'
 
 interface ChannelSettings {
@@ -49,7 +49,7 @@ export default function StudioSettingsPage() {
     if (!uid) return
     async function loadSettings() {
       try {
-        const ref = doc(db, 'creatorSettings', uid!)
+        const ref = doc(requireFirestoreDb(), 'creatorSettings', uid!)
         const snap = await getDoc(ref)
         if (snap.exists()) {
           setForm({ ...DEFAULTS, ...snap.data() as ChannelSettings })
@@ -79,7 +79,7 @@ export default function StudioSettingsPage() {
     if (!uid) return
     setSaving(true)
     try {
-      const ref = doc(db, 'creatorSettings', uid)
+      const ref = doc(requireFirestoreDb(), 'creatorSettings', uid)
       await updateDoc(ref, { ...form }).catch(async () => {
         // Doc doesn't exist yet — use setDoc via dynamic import
         const { setDoc } = await import('firebase/firestore')

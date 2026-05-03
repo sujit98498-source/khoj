@@ -21,7 +21,7 @@ import {
   setDoc,
 } from 'firebase/firestore'
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
-import { db, storage } from '@/lib/firebase/config'
+import { requireFirestoreDb, requireFirebaseStorage } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import {
   CommunityPost,
@@ -384,10 +384,6 @@ export async function uploadCommunityImage(file: File, userId: string): Promise<
     throw new Error('No image file selected.')
   }
 
-  if (!storage) {
-    throw new Error('Firebase Storage is not initialized.')
-  }
-
   const supportedTypes = ['image/png', 'image/jpeg', 'image/webp']
   if (!supportedTypes.includes(file.type)) {
     throw new Error('Only PNG, JPG, JPEG, and WEBP images are supported.')
@@ -395,7 +391,7 @@ export async function uploadCommunityImage(file: File, userId: string): Promise<
 
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
   const path = `community/${userId}/${Date.now()}-${safeName}`
-  const storageRef = ref(storage, path)
+  const storageRef = ref(requireFirebaseStorage(), path)
 
   try {
     await uploadBytes(storageRef, file)
@@ -407,7 +403,7 @@ export async function uploadCommunityImage(file: File, userId: string): Promise<
 }
 
 export async function createPost(input: CreatePostInput): Promise<string> {
-  const ref = await addDoc(collection(db, COLLECTIONS.COMMUNITY_POSTS), {
+  const ref = await addDoc(collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS), {
     ...input,
     reactions: { like: 0, fire: 0, clap: 0, insightful: 0, support: 0 },
     commentCount: 0,
@@ -421,13 +417,13 @@ export async function createPost(input: CreatePostInput): Promise<string> {
 export async function getPosts(circleFilter?: CircleId, count = 20): Promise<CommunityPost[]> {
   try {
     let q = query(
-      collection(db, COLLECTIONS.COMMUNITY_POSTS),
+      collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS),
       orderBy('createdAt', 'desc'),
       limit(count)
     )
     if (circleFilter) {
       q = query(
-        collection(db, COLLECTIONS.COMMUNITY_POSTS),
+        collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS),
         where('circle', '==', circleFilter),
         orderBy('createdAt', 'desc'),
         limit(count)
@@ -469,13 +465,13 @@ export function subscribeToFeed(
   try {
     const q = circleFilter
       ? query(
-          collection(db, COLLECTIONS.COMMUNITY_POSTS),
+          collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS),
           where('circle', '==', circleFilter),
           orderBy('createdAt', 'desc'),
           limit(count)
         )
       : query(
-          collection(db, COLLECTIONS.COMMUNITY_POSTS),
+          collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS),
           orderBy('createdAt', 'desc'),
           limit(count)
         )
@@ -507,7 +503,7 @@ export async function deletePost(postId: string): Promise<void> {
   writeDeletedPostIds(Array.from(deletedPostIds))
 
   try {
-    await deleteDoc(doc(db, COLLECTIONS.COMMUNITY_POSTS, postId))
+    await deleteDoc(doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS, postId))
   } catch {
     // Mock posts or local-only content may not exist in Firestore.
   }
@@ -540,7 +536,7 @@ export async function submitPostReport(input: SubmitPostReportInput): Promise<Co
   writeLocalReports(mergeReports([report, ...readLocalReports()]))
 
   try {
-    await setDoc(doc(db, COLLECTIONS.COMMUNITY_REPORTS, report.reportId), report)
+    await setDoc(doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_REPORTS, report.reportId), report)
   } catch {
     // Preserve local fallback so the review flow still works during setup.
   }
@@ -553,7 +549,7 @@ export async function getReportedPosts(): Promise<CommunityPostReport[]> {
 
   try {
     const q = query(
-      collection(db, COLLECTIONS.COMMUNITY_REPORTS),
+      collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_REPORTS),
       orderBy('createdAt', 'desc'),
       limit(100)
     )
@@ -594,7 +590,7 @@ export function subscribeToReportedPosts(
 
   try {
     const q = query(
-      collection(db, COLLECTIONS.COMMUNITY_REPORTS),
+      collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_REPORTS),
       orderBy('createdAt', 'desc'),
       limit(100)
     )
@@ -642,7 +638,7 @@ export async function updateReportStatus(
   }
 
   try {
-    await updateDoc(doc(db, COLLECTIONS.COMMUNITY_REPORTS, reportId), {
+    await updateDoc(doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_REPORTS, reportId), {
       status,
       reviewedBy: reviewedBy ?? null,
       reviewedAt,
@@ -671,10 +667,10 @@ export async function reactToPost(
   userId: string,
   reaction: ReactionType
 ): Promise<void> {
-  const userReactionRef = doc(db, COLLECTIONS.COMMUNITY_POSTS, postId, 'userReactions', userId)
+  const userReactionRef = doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS, postId, 'userReactions', userId)
   const existing = await getDoc(userReactionRef)
 
-  const postRef = doc(db, COLLECTIONS.COMMUNITY_POSTS, postId)
+  const postRef = doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS, postId)
 
   if (existing.exists()) {
     const prev = existing.data().reaction as ReactionType
@@ -699,7 +695,7 @@ export async function reactToPost(
 
 export async function getUserReaction(postId: string, userId: string): Promise<ReactionType | null> {
   try {
-    const ref = doc(db, COLLECTIONS.COMMUNITY_POSTS, postId, 'userReactions', userId)
+    const ref = doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS, postId, 'userReactions', userId)
     const snap = await getDoc(ref)
     if (!snap.exists()) return null
     return snap.data().reaction as ReactionType
@@ -720,7 +716,7 @@ export async function addComment(
   const createdAt = new Date().toISOString()
 
   try {
-    const ref = await addDoc(collection(db, COLLECTIONS.COMMUNITY_COMMENTS), {
+    const ref = await addDoc(collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_COMMENTS), {
       postId,
       authorId,
       authorName,
@@ -742,7 +738,7 @@ export async function addComment(
     localMockComments = [...localMockComments, createdComment]
 
     try {
-      await updateDoc(doc(db, COLLECTIONS.COMMUNITY_POSTS, postId), {
+      await updateDoc(doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS, postId), {
         commentCount: increment(1),
       })
     } catch {
@@ -769,7 +765,7 @@ export async function addComment(
 export async function getComments(postId: string): Promise<CommunityComment[]> {
   try {
     const q = query(
-      collection(db, COLLECTIONS.COMMUNITY_COMMENTS),
+      collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_COMMENTS),
       where('postId', '==', postId),
       orderBy('createdAt', 'asc'),
       limit(50)
@@ -788,7 +784,7 @@ export function subscribeToComments(
 ): Unsubscribe {
   try {
     const q = query(
-      collection(db, COLLECTIONS.COMMUNITY_COMMENTS),
+      collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_COMMENTS),
       where('postId', '==', postId),
       orderBy('createdAt', 'asc')
     )
@@ -815,7 +811,7 @@ export async function isPostSaved(postId: string, userId: string): Promise<boole
   const locallySaved = readSavedPostIds(userId).includes(postId)
 
   try {
-    const ref = doc(db, COLLECTIONS.COMMUNITY_POSTS, postId, 'saves', userId)
+    const ref = doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS, postId, 'saves', userId)
     const snap = await getDoc(ref)
     return snap.exists() || locallySaved
   } catch {
@@ -836,9 +832,9 @@ export async function savePost(postId: string, userId: string): Promise<boolean>
   writeSavedPostIds(userId, Array.from(savedIds))
 
   try {
-    const ref = doc(db, COLLECTIONS.COMMUNITY_POSTS, postId, 'saves', userId)
+    const ref = doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS, postId, 'saves', userId)
     const existing = await getDoc(ref)
-    const postRef = doc(db, COLLECTIONS.COMMUNITY_POSTS, postId)
+    const postRef = doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS, postId)
 
     if (existing.exists()) {
       await deleteDoc(ref)
@@ -864,7 +860,7 @@ export async function getSavedPosts(userId: string): Promise<CommunityPost[]> {
   const savedIds = new Set(readSavedPostIds(userId))
 
   try {
-    const savesQuery = query(collectionGroup(db, 'saves'), where('userId', '==', userId))
+    const savesQuery = query(collectionGroup(requireFirestoreDb(), 'saves'), where('userId', '==', userId))
     const snap = await getDocs(savesQuery)
 
     snap.docs.forEach((savedDoc) => {
@@ -883,7 +879,7 @@ export async function getSavedPosts(userId: string): Promise<CommunityPost[]> {
       if (mockPost) return mockPost
 
       try {
-        const snap = await getDoc(doc(db, COLLECTIONS.COMMUNITY_POSTS, postId))
+        const snap = await getDoc(doc(requireFirestoreDb(), COLLECTIONS.COMMUNITY_POSTS, postId))
         if (!snap.exists()) return null
         return { id: snap.id, ...snap.data() } as CommunityPost
       } catch {

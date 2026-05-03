@@ -12,7 +12,7 @@ import {
   onSnapshot,
   Timestamp,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import type { FriendRequest, FriendStatus, Friendship } from '@/lib/types'
 
@@ -36,7 +36,7 @@ export function useIncomingRequests(myUid: string | null) {
     if (!myUid) { setRequests([]); setLoading(false); return }
 
     const q = query(
-      collection(db, COLLECTIONS.FRIEND_REQUESTS),
+      collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
       where('toUserId', '==', myUid),
       where('status', '==', 'pending')
     )
@@ -84,7 +84,7 @@ export function useSentRequests(myUid: string | null) {
     if (!myUid) { setRequests([]); setLoading(false); return }
 
     const q = query(
-      collection(db, COLLECTIONS.FRIEND_REQUESTS),
+      collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
       where('fromUserId', '==', myUid),
       where('status', '==', 'pending')
     )
@@ -132,7 +132,7 @@ export function useFriends(myUid: string | null) {
     if (!myUid) { setFriends([]); setLoading(false); return }
 
     const q = query(
-      collection(db, COLLECTIONS.FRIENDS),
+      collection(requireFirestoreDb(), COLLECTIONS.FRIENDS),
       where('userIds', 'array-contains', myUid)
     )
 
@@ -215,7 +215,7 @@ export function useFriendStatus(
     }
 
     const unsubFriend = onSnapshot(
-      doc(db, COLLECTIONS.FRIENDS, friendshipId),
+      doc(requireFirestoreDb(), COLLECTIONS.FRIENDS, friendshipId),
       (snap) => {
         isConnected = snap.exists()
         deriveStatus()
@@ -229,7 +229,7 @@ export function useFriendStatus(
     )
 
     const sentQuery = query(
-      collection(db, COLLECTIONS.FRIEND_REQUESTS),
+      collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
       where('fromUserId', '==', myUid),
       where('toUserId', '==', theirUid),
       where('status', '==', 'pending')
@@ -249,7 +249,7 @@ export function useFriendStatus(
     )
 
     const receivedQuery = query(
-      collection(db, COLLECTIONS.FRIEND_REQUESTS),
+      collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
       where('fromUserId', '==', theirUid),
       where('toUserId', '==', myUid),
       where('status', '==', 'pending')

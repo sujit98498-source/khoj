@@ -23,7 +23,7 @@ import { ReportTargetType } from '@/services/reportService'
 import { ReportModal } from '@/components/reports/ReportModal'
 import { Stream } from '@/lib/types'
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import toast from 'react-hot-toast'
 
 interface ReportTarget {
@@ -332,14 +332,14 @@ function FollowingTab({ uid, searchQuery, onDiscover }: { uid: string | null; se
       setLoading(true)
       try {
         // 1. Get the list of followed user IDs
-        const followingSnap = await getDocs(collection(db, 'users', uid!, 'following'))
+        const followingSnap = await getDocs(collection(requireFirestoreDb(), 'users', uid!, 'following'))
         const followedIds = followingSnap.docs.map((d) => d.data().userId as string)
 
         if (followedIds.length === 0) {
           setItems([])
           // Load recommendations (top recent public media)
           const recSnap = await getDocs(
-            query(collection(db, 'media'),
+            query(collection(requireFirestoreDb(), 'media'),
               where('status', '==', 'published'),
               where('visibility', '==', 'public'),
               orderBy('createdAt', 'desc'),
@@ -356,7 +356,7 @@ function FollowingTab({ uid, searchQuery, onDiscover }: { uid: string | null; se
         const results: MediaDoc[] = []
         for (const chunk of chunks) {
           const snap = await getDocs(
-            query(collection(db, 'media'),
+            query(collection(requireFirestoreDb(), 'media'),
               where('creatorId', 'in', chunk),
               where('status', '==', 'published'),
               where('visibility', '==', 'public'),

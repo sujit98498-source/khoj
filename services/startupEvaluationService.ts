@@ -2,7 +2,7 @@
 // KHOJ AI — Client-side Firestore helpers for startup evaluations
 // Used by UI components to fetch / listen to evaluations
 
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import {
   collection,
   doc,
@@ -31,7 +31,7 @@ export interface StoredEvaluation extends StartupEvaluationResult {
 
 // ── Fetch a single evaluation by ID ──────────────────────────────────────────
 export async function getEvaluationById(evaluationId: string): Promise<StoredEvaluation | null> {
-  const snap = await getDoc(doc(db, 'startupEvaluations', evaluationId))
+  const snap = await getDoc(doc(requireFirestoreDb(), 'startupEvaluations', evaluationId))
   if (!snap.exists()) return null
   return { evaluationId: snap.id, ...snap.data() } as StoredEvaluation
 }
@@ -41,7 +41,7 @@ export async function getLatestRoomEvaluation(
   roomId: string
 ): Promise<Pick<StoredEvaluation, 'evaluationId' | 'overallScore' | 'ratingLabel' | 'summary' | 'confidenceLevel' | 'createdAt'> | null> {
   const q = query(
-    collection(db, 'rooms', roomId, 'aiEvaluations'),
+    collection(requireFirestoreDb(), 'rooms', roomId, 'aiEvaluations'),
     orderBy('createdAt', 'desc'),
     limit(1)
   )
@@ -57,7 +57,7 @@ export function subscribeToRoomEvaluation(
   callback: (data: Pick<StoredEvaluation, 'evaluationId' | 'overallScore' | 'ratingLabel' | 'summary' | 'confidenceLevel' | 'createdAt'> | null) => void
 ): Unsubscribe {
   const q = query(
-    collection(db, 'rooms', roomId, 'aiEvaluations'),
+    collection(requireFirestoreDb(), 'rooms', roomId, 'aiEvaluations'),
     orderBy('createdAt', 'desc'),
     limit(1)
   )
@@ -71,7 +71,7 @@ export function subscribeToRoomEvaluation(
 // ── Fetch all evaluations for a user ─────────────────────────────────────────
 export async function getUserEvaluations(userId: string): Promise<StoredEvaluation[]> {
   const q = query(
-    collection(db, 'startupEvaluations'),
+    collection(requireFirestoreDb(), 'startupEvaluations'),
     where('userId', '==', userId),
     orderBy('createdAt', 'desc'),
     limit(20)

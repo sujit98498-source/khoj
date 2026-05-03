@@ -16,7 +16,7 @@ import {
   where,
   Timestamp,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -74,7 +74,7 @@ export interface CreateReportPayload {
 export async function createReport(payload: CreateReportPayload): Promise<string> {
   // Duplicate check: same user already reported this content
   const dupQuery = query(
-    collection(db, 'reports'),
+    collection(requireFirestoreDb(), 'reports'),
     where('reportedBy', '==', payload.reportedBy),
     where('targetId', '==', payload.targetId),
     where('targetType', '==', payload.targetType)
@@ -84,7 +84,7 @@ export async function createReport(payload: CreateReportPayload): Promise<string
     throw new Error('DUPLICATE_REPORT')
   }
 
-  const ref = await addDoc(collection(db, 'reports'), {
+  const ref = await addDoc(collection(requireFirestoreDb(), 'reports'), {
     ...payload,
     status: 'pending',
     createdAt: serverTimestamp(),
@@ -101,7 +101,7 @@ export async function createReport(payload: CreateReportPayload): Promise<string
 export function subscribeReports(
   callback: (reports: Report[]) => void
 ): () => void {
-  const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'))
+  const q = query(collection(requireFirestoreDb(), 'reports'), orderBy('createdAt', 'desc'))
   return onSnapshot(q, (snap) => {
     const items: Report[] = snap.docs.map((d) => ({
       id: d.id,
@@ -118,7 +118,7 @@ export async function markReportReviewed(
   reportId: string,
   adminUid: string
 ): Promise<void> {
-  await updateDoc(doc(db, 'reports', reportId), {
+  await updateDoc(doc(requireFirestoreDb(), 'reports', reportId), {
     status: 'reviewed',
     reviewedAt: serverTimestamp(),
     reviewedBy: adminUid,
@@ -131,7 +131,7 @@ export async function dismissReport(
   reportId: string,
   adminUid: string
 ): Promise<void> {
-  await updateDoc(doc(db, 'reports', reportId), {
+  await updateDoc(doc(requireFirestoreDb(), 'reports', reportId), {
     status: 'dismissed',
     reviewedAt: serverTimestamp(),
     reviewedBy: adminUid,
@@ -153,7 +153,7 @@ export async function removeReportTarget(
   // Soft-delete the target
   const targetCollection = TARGET_COLLECTION[targetType]
   if (targetCollection) {
-    await updateDoc(doc(db, targetCollection, targetId), {
+    await updateDoc(doc(requireFirestoreDb(), targetCollection, targetId), {
       isDeleted: true,
       deletedByAdmin: true,
       deletedAt: serverTimestamp(),
@@ -161,7 +161,7 @@ export async function removeReportTarget(
   }
 
   // Update report
-  await updateDoc(doc(db, 'reports', reportId), {
+  await updateDoc(doc(requireFirestoreDb(), 'reports', reportId), {
     status: 'action_taken',
     reviewedAt: serverTimestamp(),
     reviewedBy: adminUid,

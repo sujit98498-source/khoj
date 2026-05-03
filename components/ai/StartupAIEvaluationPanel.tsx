@@ -4,7 +4,6 @@
 // Shows evaluation if one exists, or prompts founder to run one.
 
 import React, { useEffect, useState } from 'react'
-import { auth } from '@/lib/firebase/config'
 import type { CollabRoom } from '@/types/collaboration'
 import type { StartupEvaluationResult } from '@/lib/ai/startupEvaluation'
 import type { StoredEvaluation } from '@/services/startupEvaluationService'

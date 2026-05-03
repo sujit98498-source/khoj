@@ -180,7 +180,9 @@ function ProfileDropdown({
     onClose()
     const { signOut } = await import('firebase/auth')
     const { auth } = await import('@/lib/firebase/config')
-    await signOut(auth)
+    if (auth) {
+      await signOut(auth)
+    }
     router.push('/auth/login')
   }
 

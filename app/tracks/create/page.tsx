@@ -13,7 +13,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
-import { storage } from '@/lib/firebase/config'
+import { requireFirebaseStorage } from '@/lib/firebase/config'
 import {
   createTrack,
   addLesson,
@@ -141,7 +141,7 @@ export default function CreateTrackPage() {
       // Upload thumbnail if provided
       let thumbnailUrl = ''
       if (thumbFile) {
-        const storageRef = ref(storage, `trackThumbnails/${uid}/${Date.now()}_${thumbFile.name}`)
+        const storageRef = ref(requireFirebaseStorage(), `trackThumbnails/${uid}/${Date.now()}_${thumbFile.name}`)
         await new Promise<void>((resolve, reject) => {
           const task = uploadBytesResumable(storageRef, thumbFile)
           task.on('state_changed',

@@ -9,7 +9,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from 'firebase/auth'
-import { auth } from '@/lib/firebase/config'
+import { requireFirebaseAuth } from '@/lib/firebase/config'
 import { createUserDocument, getUserById } from '@/services/userService'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -39,6 +39,7 @@ export function SignupForm() {
     if (!validate()) return
     setLoading(true)
     try {
+      const auth = requireFirebaseAuth()
       const { user } = await createUserWithEmailAndPassword(auth, email, password)
       await updateProfile(user, { displayName: name })
       await createUserDocument(user.uid, name.trim(), email)
@@ -59,6 +60,7 @@ export function SignupForm() {
   const handleGoogleSignup = async () => {
     setLoading(true)
     try {
+      const auth = requireFirebaseAuth()
       const provider = new GoogleAuthProvider()
       provider.setCustomParameters({ prompt: 'select_account' })
 

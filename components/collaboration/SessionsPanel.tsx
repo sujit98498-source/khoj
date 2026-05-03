@@ -62,7 +62,7 @@ export function SessionsPanel({
     await endStartupSession(roomId, session.id)
   }
 
-  const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL
+  const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL?.trim()
 
   // If user is in a session with a token, render the LiveKit room full-screen
   if (activeSessionId && tokenMap[activeSessionId] && livekitUrl) {
@@ -89,6 +89,12 @@ export function SessionsPanel({
 
   return (
     <div className="space-y-4">
+      {!livekitUrl && (
+        <div className="rounded-xl border border-khoj-border bg-[#0d0d16] px-4 py-3 text-sm text-khoj-subtle">
+          LiveKit not configured
+        </div>
+      )}
+
       {canManage && (
         <div className="flex justify-end">
           <Button variant="secondary" onClick={() => setShowCreate(!showCreate)}>
@@ -157,7 +163,7 @@ export function SessionsPanel({
                   <Button
                     variant="primary"
                     onClick={() => joinSession(s)}
-                    disabled={tokenLoading === s.id}
+                    disabled={!livekitUrl || tokenLoading === s.id}
                   >
                     {tokenLoading === s.id ? '…' : 'Join'}
                   </Button>

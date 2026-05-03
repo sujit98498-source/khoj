@@ -97,7 +97,7 @@ export function StartupEvaluationForm({ roomId, startupId, prefill, onResult, on
     setLoading(true)
 
     try {
-      const user = auth.currentUser
+      const user = auth?.currentUser
       if (!user) throw new Error('You must be signed in to run an evaluation.')
       const token = await user.getIdToken()
 

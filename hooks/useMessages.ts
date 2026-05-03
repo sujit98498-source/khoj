@@ -15,7 +15,7 @@ import {
   onSnapshot,
   Timestamp,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS, subCollections } from '@/lib/firebase/collections'
 import { markConversationRead } from '@/services/messageService'
 import { getUserById } from '@/services/userService'
@@ -46,7 +46,7 @@ export function useConversations(uid: string | null) {
     }
 
     const q = query(
-      collection(db, COLLECTIONS.CONVERSATIONS),
+      collection(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS),
       where('participantIds', 'array-contains', uid),
       orderBy('lastMessageAt', 'desc')
     )
@@ -142,7 +142,7 @@ export function useConversations(uid: string | null) {
                 enrichedRef.current.delete(c.id)
               }
 
-              const convoRef = doc(db, COLLECTIONS.CONVERSATIONS, c.id)
+              const convoRef = doc(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS, c.id)
               await updateDoc(convoRef, { participants: rebuilt }).catch(() => {})
               // onSnapshot re-fires with the corrected participants
             } catch {
@@ -187,7 +187,7 @@ export function useChatMessages(
     }
 
     const q = query(
-      collection(db, subCollections.messages(conversationId)),
+      collection(requireFirestoreDb(), subCollections.messages(conversationId)),
       orderBy('createdAt', 'asc')
     )
 
@@ -241,7 +241,7 @@ export function useTypingStatus(
   useEffect(() => {
     if (!conversationId || !otherUid) { setIsTyping(false); return }
 
-    const convoRef = doc(db, COLLECTIONS.CONVERSATIONS, conversationId)
+    const convoRef = doc(requireFirestoreDb(), COLLECTIONS.CONVERSATIONS, conversationId)
     const unsub = onSnapshot(convoRef, (snap) => {
       if (!snap.exists()) { setIsTyping(false); return }
       const typing = snap.data()?.typing as Record<string, Timestamp> | undefined
@@ -269,7 +269,7 @@ export function useUserPresence(uid: string | null): boolean {
   useEffect(() => {
     if (!uid) { setIsOnline(false); return }
 
-    const userRef = doc(db, 'users', uid)
+    const userRef = doc(requireFirestoreDb(), 'users', uid)
     const unsub = onSnapshot(userRef, (snap) => {
       if (!snap.exists()) { setIsOnline(false); return }
       const lastActive = snap.data()?.lastActive

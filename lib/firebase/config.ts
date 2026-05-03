@@ -1,53 +1,113 @@
 // lib/firebase/config.ts
 // Client-side Firebase SDK initialization
-// Used in browser components for Auth + Firestore real-time
+// Used in browser components for Auth + Firestore real-time.
 
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app'
-import { getAuth, Auth } from 'firebase/auth'
-import { getFirestore, Firestore } from 'firebase/firestore'
-import { getStorage, FirebaseStorage } from 'firebase/storage'
+import { initializeApp, getApps, getApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app'
+import { getAuth, type Auth } from 'firebase/auth'
+import { getFirestore, type Firestore } from 'firebase/firestore'
+import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+const REQUIRED_FIREBASE_ENV = [
+  'NEXT_PUBLIC_FIREBASE_API_KEY',
+  'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+  'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
+  'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+  'NEXT_PUBLIC_FIREBASE_APP_ID',
+] as const
+
+type FirebaseEnvName = (typeof REQUIRED_FIREBASE_ENV)[number]
+
+function readPublicEnv(name: FirebaseEnvName): string {
+  const value = process.env[name]?.trim() ?? ''
+  const normalized = value.toLowerCase()
+
+  if (
+    !value ||
+    normalized === 'undefined' ||
+    normalized === 'null' ||
+    normalized.includes('your-') ||
+    normalized.includes('your_') ||
+    normalized.includes('replace-me')
+  ) {
+    return ''
+  }
+
+  return value
 }
 
-// Guard: do not initialize Firebase with missing/empty credentials.
-// This prevents build-time crashes on Vercel when env vars are not yet set.
-const isFirebaseConfigured =
-  typeof firebaseConfig.apiKey === 'string' && firebaseConfig.apiKey.length > 0 &&
-  typeof firebaseConfig.projectId === 'string' && firebaseConfig.projectId.length > 0
+const firebaseEnv = Object.fromEntries(
+  REQUIRED_FIREBASE_ENV.map((name) => [name, readPublicEnv(name)])
+) as Record<FirebaseEnvName, string>
 
-if (!isFirebaseConfigured) {
-  console.warn(
-    '[Firebase] Missing required environment variables. Firebase will not initialize.\n' +
-    'Add the following to your Vercel project environment variables:\n' +
-    '  NEXT_PUBLIC_FIREBASE_API_KEY\n' +
-    '  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN\n' +
-    '  NEXT_PUBLIC_FIREBASE_PROJECT_ID\n' +
-    '  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET\n' +
-    '  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID\n' +
-    '  NEXT_PUBLIC_FIREBASE_APP_ID'
-  )
+const missingFirebaseEnv = REQUIRED_FIREBASE_ENV.filter((name) => !firebaseEnv[name])
+
+export const firebaseConfigReady = missingFirebaseEnv.length === 0
+
+const firebaseConfig: FirebaseOptions = {
+  apiKey: firebaseEnv.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: firebaseEnv.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: firebaseEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: firebaseEnv.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: firebaseEnv.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: firebaseEnv.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-// Prevent duplicate app initialization in hot-reload dev.
-// Only initialize when config is valid.
+function warnFirebaseConfigMissing(detail?: string) {
+  const suffix = detail ? ` ${detail}` : ''
+  console.warn(`Firebase config missing. Check Vercel environment variables.${suffix}`)
+}
+
 let app: FirebaseApp | null = null
-if (isFirebaseConfigured) {
-  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
-} else if (getApps().length > 0) {
-  app = getApp()
+let authInstance: Auth | null = null
+let dbInstance: Firestore | null = null
+let storageInstance: FirebaseStorage | null = null
+
+if (!firebaseConfigReady) {
+  warnFirebaseConfigMissing(
+    missingFirebaseEnv.length > 0 ? `Missing: ${missingFirebaseEnv.join(', ')}.` : undefined
+  )
+} else {
+  try {
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+    authInstance = getAuth(app)
+    dbInstance = getFirestore(app)
+    storageInstance = getStorage(app)
+  } catch (error) {
+    app = null
+    authInstance = null
+    dbInstance = null
+    storageInstance = null
+    warnFirebaseConfigMissing(error instanceof Error ? `Firebase SDK error: ${error.message}` : undefined)
+  }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const auth: Auth = app ? getAuth(app) : (null as any)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const db: Firestore = app ? getFirestore(app) : (null as any)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const storage: FirebaseStorage = app ? getStorage(app) : (null as any)
+export const auth = authInstance
+export const db = dbInstance
+export const storage = storageInstance
+
+export function requireFirebaseAuth(): Auth {
+  if (!authInstance) {
+    throw new Error('Firebase is not configured.')
+  }
+
+  return authInstance
+}
+
+export function requireFirestoreDb(): Firestore {
+  if (!dbInstance) {
+    throw new Error('Firebase is not configured.')
+  }
+
+  return dbInstance
+}
+
+export function requireFirebaseStorage(): FirebaseStorage {
+  if (!storageInstance) {
+    throw new Error('Firebase is not configured.')
+  }
+
+  return storageInstance
+}
+
 export default app

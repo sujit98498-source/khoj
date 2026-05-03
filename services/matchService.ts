@@ -14,7 +14,7 @@ import {
   where,
   increment,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { Match, XP_CONFIG } from '@/lib/types'
 import { addMatchHistoryEntry, recalculateRanks } from './userService'
@@ -27,7 +27,7 @@ import { generateMatches, MatchmakingConfig } from './matchmakingService'
  */
 export async function getMatchesByTournament(tournamentId: string): Promise<Match[]> {
   const q = query(
-    collection(db, COLLECTIONS.MATCHES),
+    collection(requireFirestoreDb(), COLLECTIONS.MATCHES),
     where('tournamentId', '==', tournamentId),
     orderBy('createdAt', 'desc')
   )
@@ -40,11 +40,11 @@ export async function getMatchesByTournament(tournamentId: string): Promise<Matc
  */
 export async function getUserMatches(userId: string): Promise<Match[]> {
   const q1 = query(
-    collection(db, COLLECTIONS.MATCHES),
+    collection(requireFirestoreDb(), COLLECTIONS.MATCHES),
     where('player1Id', '==', userId)
   )
   const q2 = query(
-    collection(db, COLLECTIONS.MATCHES),
+    collection(requireFirestoreDb(), COLLECTIONS.MATCHES),
     where('player2Id', '==', userId)
   )
   const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)])
@@ -63,7 +63,7 @@ export async function getUserMatches(userId: string): Promise<Match[]> {
 export async function createMatch(
   data: Omit<Match, 'id' | 'xpAwarded' | 'completedAt'>
 ): Promise<string> {
-  const ref = await addDoc(collection(db, COLLECTIONS.MATCHES), {
+  const ref = await addDoc(collection(requireFirestoreDb(), COLLECTIONS.MATCHES), {
     ...data,
     xpAwarded: false,
     completedAt: null,
@@ -80,7 +80,7 @@ export async function submitMatchResult(
   player1Score: number,
   player2Score: number
 ): Promise<{ success: boolean; message: string }> {
-  const matchRef = doc(db, COLLECTIONS.MATCHES, matchId)
+  const matchRef = doc(requireFirestoreDb(), COLLECTIONS.MATCHES, matchId)
   const matchSnap = await getDoc(matchRef)
 
   if (!matchSnap.exists()) return { success: false, message: 'Match not found' }
@@ -128,7 +128,7 @@ export async function submitMatchResult(
     const loserXP = XP_CONFIG.LOSS
 
     // Update winner stats
-    const winnerRef = doc(db, COLLECTIONS.USERS, winnerId)
+    const winnerRef = doc(requireFirestoreDb(), COLLECTIONS.USERS, winnerId)
     xpOps.push(
       updateDoc(winnerRef, {
         xp: increment(winnerXP),
@@ -140,7 +140,7 @@ export async function submitMatchResult(
 
     // Update loser stats
     if (loserId) {
-      const loserRef = doc(db, COLLECTIONS.USERS, loserId)
+      const loserRef = doc(requireFirestoreDb(), COLLECTIONS.USERS, loserId)
       xpOps.push(
         updateDoc(loserRef, {
           xp: increment(loserXP),
@@ -188,8 +188,8 @@ export async function submitMatchResult(
   } else {
     // Draw — both get participation XP
     const drawXP = XP_CONFIG.PARTICIPATION
-    const p1Ref = doc(db, COLLECTIONS.USERS, match.player1Id)
-    const p2Ref = doc(db, COLLECTIONS.USERS, match.player2Id)
+    const p1Ref = doc(requireFirestoreDb(), COLLECTIONS.USERS, match.player1Id)
+    const p2Ref = doc(requireFirestoreDb(), COLLECTIONS.USERS, match.player2Id)
     xpOps.push(
       updateDoc(p1Ref, { xp: increment(drawXP), matchesPlayed: increment(1) }),
       updateDoc(p2Ref, { xp: increment(drawXP), matchesPlayed: increment(1) }),
@@ -262,7 +262,7 @@ export async function startTournamentMatches(
 
 export async function getMatchesUnderReview(): Promise<Match[]> {
   const q = query(
-    collection(db, COLLECTIONS.MATCHES),
+    collection(requireFirestoreDb(), COLLECTIONS.MATCHES),
     where('status', '==', 'under_review')
   )
 
@@ -286,7 +286,7 @@ export async function approveMatch(
     throw new Error('Winner and loser are required')
   }
 
-  const matchRef = doc(db, COLLECTIONS.MATCHES, matchId)
+  const matchRef = doc(requireFirestoreDb(), COLLECTIONS.MATCHES, matchId)
   const matchSnap = await getDoc(matchRef)
 
   if (!matchSnap.exists()) {
@@ -309,14 +309,14 @@ export async function approveMatch(
     completedAt: now,
   })
 
-  await updateDoc(doc(db, COLLECTIONS.USERS, winnerId), {
+  await updateDoc(doc(requireFirestoreDb(), COLLECTIONS.USERS, winnerId), {
     xp: increment(winnerXPGained),
     wins: increment(1),
     matchesPlayed: increment(1),
     lastActive: now,
   })
 
-  await updateDoc(doc(db, COLLECTIONS.USERS, loserId), {
+  await updateDoc(doc(requireFirestoreDb(), COLLECTIONS.USERS, loserId), {
     losses: increment(1),
     matchesPlayed: increment(1),
     lastActive: now,
@@ -326,7 +326,7 @@ export async function approveMatch(
 }
 
 export async function rejectMatch(matchId: string): Promise<{ success: boolean }> {
-  const matchRef = doc(db, COLLECTIONS.MATCHES, matchId)
+  const matchRef = doc(requireFirestoreDb(), COLLECTIONS.MATCHES, matchId)
   const matchSnap = await getDoc(matchRef)
 
   if (!matchSnap.exists()) {

@@ -20,7 +20,7 @@ import {
   Timestamp,
   writeBatch,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -162,7 +162,7 @@ export async function upsertLeaderboard(
   userAvatar: string,
   xpDelta: number
 ): Promise<void> {
-  const ref = doc(db, 'leaderboards', trackId, 'users', userId)
+  const ref = doc(requireFirestoreDb(), 'leaderboards', trackId, 'users', userId)
   const snap = await getDoc(ref)
   if (snap.exists()) {
     await updateDoc(ref, {
@@ -189,7 +189,7 @@ export function subscribeLeaderboard(
 ): () => void {
   return onSnapshot(
     query(
-      collection(db, 'leaderboards', trackId, 'users'),
+      collection(requireFirestoreDb(), 'leaderboards', trackId, 'users'),
       orderBy('xp', 'desc'),
       limit(10)
     ),
@@ -210,7 +210,7 @@ export function subscribeUserLeaderboardEntry(
   onUpdate: (entry: LeaderboardEntry | null) => void
 ): () => void {
   return onSnapshot(
-    doc(db, 'leaderboards', trackId, 'users', userId),
+    doc(requireFirestoreDb(), 'leaderboards', trackId, 'users', userId),
     (snap) => {
       onUpdate(snap.exists() ? ({ ...snap.data(), rank: 0 } as LeaderboardEntry) : null)
     },
@@ -258,7 +258,7 @@ export function levelBg(level: TrackLevel): string {
 // ── Tracks CRUD ───────────────────────────────────────────────────────────────
 
 export async function createTrack(data: Omit<TrackDoc, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
-  const ref = await addDoc(collection(db, 'tracks'), {
+  const ref = await addDoc(collection(requireFirestoreDb(), 'tracks'), {
     ...data,
     enrolledCount: 0,
     completedCount: 0,
@@ -271,14 +271,14 @@ export async function createTrack(data: Omit<TrackDoc, 'id' | 'createdAt' | 'upd
 
 export async function updateTrack(trackId: string, data: Partial<TrackDoc>): Promise<void> {
   const { id: _id, createdAt: _ca, ...rest } = data as any
-  await updateDoc(doc(db, 'tracks', trackId), {
+  await updateDoc(doc(requireFirestoreDb(), 'tracks', trackId), {
     ...rest,
     updatedAt: serverTimestamp(),
   })
 }
 
 export async function deleteTrack(trackId: string): Promise<void> {
-  await updateDoc(doc(db, 'tracks', trackId), {
+  await updateDoc(doc(requireFirestoreDb(), 'tracks', trackId), {
     status: 'draft',
     visibility: 'private',
     updatedAt: serverTimestamp(),
@@ -286,7 +286,7 @@ export async function deleteTrack(trackId: string): Promise<void> {
 }
 
 export async function getTrack(trackId: string): Promise<TrackDoc | null> {
-  const snap = await getDoc(doc(db, 'tracks', trackId))
+  const snap = await getDoc(doc(requireFirestoreDb(), 'tracks', trackId))
   if (!snap.exists()) return null
   return { id: snap.id, ...snap.data() } as TrackDoc
 }
@@ -296,7 +296,7 @@ export function subscribeTracks(
   onUpdate: (tracks: TrackDoc[]) => void
 ): () => void {
   let q = query(
-    collection(db, 'tracks'),
+    collection(requireFirestoreDb(), 'tracks'),
     where('status', '==', filters.status ?? 'published'),
     where('visibility', '==', 'public'),
     orderBy('enrolledCount', 'desc'),
@@ -319,7 +319,7 @@ export function subscribeCreatorTracks(
   onUpdate: (tracks: TrackDoc[]) => void
 ): () => void {
   const q = query(
-    collection(db, 'tracks'),
+    collection(requireFirestoreDb(), 'tracks'),
     where('creatorId', '==', creatorId),
     orderBy('createdAt', 'desc')
   )
@@ -334,11 +334,11 @@ export async function addLesson(
   trackId: string,
   data: Omit<TrackLesson, 'id' | 'createdAt'>
 ): Promise<string> {
-  const ref = await addDoc(collection(db, 'tracks', trackId, 'lessons'), {
+  const ref = await addDoc(collection(requireFirestoreDb(), 'tracks', trackId, 'lessons'), {
     ...data,
     createdAt: serverTimestamp(),
   })
-  await updateDoc(doc(db, 'tracks', trackId), {
+  await updateDoc(doc(requireFirestoreDb(), 'tracks', trackId), {
     lessonCount: increment(1),
     updatedAt: serverTimestamp(),
   })
@@ -351,12 +351,12 @@ export async function updateLesson(
   data: Partial<TrackLesson>
 ): Promise<void> {
   const { id: _id, createdAt: _ca, ...rest } = data as any
-  await updateDoc(doc(db, 'tracks', trackId, 'lessons', lessonId), rest)
+  await updateDoc(doc(requireFirestoreDb(), 'tracks', trackId, 'lessons', lessonId), rest)
 }
 
 export async function deleteLesson(trackId: string, lessonId: string): Promise<void> {
-  await deleteDoc(doc(db, 'tracks', trackId, 'lessons', lessonId))
-  await updateDoc(doc(db, 'tracks', trackId), {
+  await deleteDoc(doc(requireFirestoreDb(), 'tracks', trackId, 'lessons', lessonId))
+  await updateDoc(doc(requireFirestoreDb(), 'tracks', trackId), {
     lessonCount: increment(-1),
     updatedAt: serverTimestamp(),
   })
@@ -364,7 +364,7 @@ export async function deleteLesson(trackId: string, lessonId: string): Promise<v
 
 export async function getLessons(trackId: string): Promise<TrackLesson[]> {
   const snap = await getDocs(
-    query(collection(db, 'tracks', trackId, 'lessons'), orderBy('order', 'asc'))
+    query(collection(requireFirestoreDb(), 'tracks', trackId, 'lessons'), orderBy('order', 'asc'))
   )
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as TrackLesson))
 }
@@ -374,7 +374,7 @@ export function subscribeLessons(
   onUpdate: (lessons: TrackLesson[]) => void
 ): () => void {
   return onSnapshot(
-    query(collection(db, 'tracks', trackId, 'lessons'), orderBy('order', 'asc')),
+    query(collection(requireFirestoreDb(), 'tracks', trackId, 'lessons'), orderBy('order', 'asc')),
     (snap) => onUpdate(snap.docs.map((d) => ({ id: d.id, ...d.data() } as TrackLesson))),
     console.warn
   )
@@ -386,11 +386,11 @@ export async function addChallenge(
   trackId: string,
   data: Omit<TrackChallenge, 'id' | 'createdAt'>
 ): Promise<string> {
-  const ref = await addDoc(collection(db, 'tracks', trackId, 'challenges'), {
+  const ref = await addDoc(collection(requireFirestoreDb(), 'tracks', trackId, 'challenges'), {
     ...data,
     createdAt: serverTimestamp(),
   })
-  await updateDoc(doc(db, 'tracks', trackId), {
+  await updateDoc(doc(requireFirestoreDb(), 'tracks', trackId), {
     challengeCount: increment(1),
     updatedAt: serverTimestamp(),
   })
@@ -399,7 +399,7 @@ export async function addChallenge(
 
 export async function getChallenges(trackId: string): Promise<TrackChallenge[]> {
   const snap = await getDocs(
-    query(collection(db, 'tracks', trackId, 'challenges'), orderBy('order', 'asc'))
+    query(collection(requireFirestoreDb(), 'tracks', trackId, 'challenges'), orderBy('order', 'asc'))
   )
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as TrackChallenge))
 }
@@ -414,7 +414,7 @@ export async function enrollInTrack(
   userName = '',
   userAvatar = ''
 ): Promise<void> {
-  const enrollRef = doc(db, 'users', userId, 'trackEnrollments', track.id)
+  const enrollRef = doc(requireFirestoreDb(), 'users', userId, 'trackEnrollments', track.id)
   const existing  = await getDoc(enrollRef)
   if (existing.exists()) return // already enrolled
 
@@ -435,10 +435,10 @@ export async function enrollInTrack(
   })
 
   // Increment track enrolledCount
-  await updateDoc(doc(db, 'tracks', track.id), { enrolledCount: increment(1) })
+  await updateDoc(doc(requireFirestoreDb(), 'tracks', track.id), { enrolledCount: increment(1) })
 
   // Init progress doc
-  await setDoc(doc(db, 'tracks', track.id, 'progress', userId), {
+  await setDoc(doc(requireFirestoreDb(), 'tracks', track.id, 'progress', userId), {
     userId,
     userName,
     completedLessons: [],
@@ -449,7 +449,7 @@ export async function enrollInTrack(
   }, { merge: true })
 
   // Init leaderboard entry with 0 XP
-  const lbRef = doc(db, 'leaderboards', track.id, 'users', userId)
+  const lbRef = doc(requireFirestoreDb(), 'leaderboards', track.id, 'users', userId)
   const lbSnap = await getDoc(lbRef)
   if (!lbSnap.exists()) {
     await setDoc(lbRef, {
@@ -467,7 +467,7 @@ export async function getEnrollment(
   userId: string,
   trackId: string
 ): Promise<TrackEnrollment | null> {
-  const snap = await getDoc(doc(db, 'users', userId, 'trackEnrollments', trackId))
+  const snap = await getDoc(doc(requireFirestoreDb(), 'users', userId, 'trackEnrollments', trackId))
   if (!snap.exists()) return null
   return snap.data() as TrackEnrollment
 }
@@ -478,7 +478,7 @@ export function subscribeEnrollment(
   onUpdate: (enrollment: TrackEnrollment | null) => void
 ): () => void {
   return onSnapshot(
-    doc(db, 'users', userId, 'trackEnrollments', trackId),
+    doc(requireFirestoreDb(), 'users', userId, 'trackEnrollments', trackId),
     (snap) => onUpdate(snap.exists() ? (snap.data() as TrackEnrollment) : null),
     console.warn
   )
@@ -490,7 +490,7 @@ export function subscribeAllEnrollments(
 ): () => void {
   return onSnapshot(
     query(
-      collection(db, 'users', userId, 'trackEnrollments'),
+      collection(requireFirestoreDb(), 'users', userId, 'trackEnrollments'),
       orderBy('enrolledAt', 'desc')
     ),
     (snap) => onUpdate(snap.docs.map((d) => d.data() as TrackEnrollment)),
@@ -509,8 +509,8 @@ export async function markLessonComplete(
   totalChallenges: number,
   userAvatar = ''
 ): Promise<{ xpEarned: number }> {
-  const progressRef   = doc(db, 'tracks', trackId, 'progress', userId)
-  const enrollmentRef = doc(db, 'users', userId, 'trackEnrollments', trackId)
+  const progressRef   = doc(requireFirestoreDb(), 'tracks', trackId, 'progress', userId)
+  const enrollmentRef = doc(requireFirestoreDb(), 'users', userId, 'trackEnrollments', trackId)
 
   const [progSnap, enrollSnap] = await Promise.all([
     getDoc(progressRef),
@@ -546,7 +546,7 @@ export async function markLessonComplete(
   if (isDone) {
     enrollUpdate.status = 'completed'
     enrollUpdate.completedAt = serverTimestamp()
-    await updateDoc(doc(db, 'tracks', trackId), { completedCount: increment(1) })
+    await updateDoc(doc(requireFirestoreDb(), 'tracks', trackId), { completedCount: increment(1) })
     await awardBadge(userId, trackId, '')
   }
 
@@ -564,7 +564,7 @@ export async function getProgress(
   trackId: string,
   userId: string
 ): Promise<TrackProgress | null> {
-  const snap = await getDoc(doc(db, 'tracks', trackId, 'progress', userId))
+  const snap = await getDoc(doc(requireFirestoreDb(), 'tracks', trackId, 'progress', userId))
   if (!snap.exists()) return null
   return snap.data() as TrackProgress
 }
@@ -582,7 +582,7 @@ export async function submitChallenge(
   videoUrl = '',
   points = XP_DEFAULT_CHALLENGE
 ): Promise<string> {
-  const ref = await addDoc(collection(db, 'tracks', trackId, 'submissions'), {
+  const ref = await addDoc(collection(requireFirestoreDb(), 'tracks', trackId, 'submissions'), {
     userId,
     userName,
     userPhoto,
@@ -601,7 +601,7 @@ export async function submitChallenge(
   await upsertLeaderboard(trackId, userId, userName, userPhoto, points)
 
   // ── Track completedChallenges in progress doc ──
-  const progressRef = doc(db, 'tracks', trackId, 'progress', userId)
+  const progressRef = doc(requireFirestoreDb(), 'tracks', trackId, 'progress', userId)
   const progSnap = await getDoc(progressRef)
   if (progSnap.exists()) {
     const prog = progSnap.data() as TrackProgress
@@ -614,7 +614,7 @@ export async function submitChallenge(
   }
 
   // ── Track completedChallenges in enrollment doc ──
-  const enrollRef = doc(db, 'users', userId, 'trackEnrollments', trackId)
+  const enrollRef = doc(requireFirestoreDb(), 'users', userId, 'trackEnrollments', trackId)
   const enrollSnap = await getDoc(enrollRef)
   if (enrollSnap.exists()) {
     const enroll = enrollSnap.data() as TrackEnrollment
@@ -635,7 +635,7 @@ export async function reviewSubmission(
   score: number,
   feedback: string
 ): Promise<void> {
-  await updateDoc(doc(db, 'tracks', trackId, 'submissions', submissionId), {
+  await updateDoc(doc(requireFirestoreDb(), 'tracks', trackId, 'submissions', submissionId), {
     status,
     score,
     feedback,
@@ -649,7 +649,7 @@ export function subscribeSubmissions(
 ): () => void {
   return onSnapshot(
     query(
-      collection(db, 'tracks', trackId, 'submissions'),
+      collection(requireFirestoreDb(), 'tracks', trackId, 'submissions'),
       orderBy('submittedAt', 'desc')
     ),
     (snap) => onUpdate(snap.docs.map((d) => ({ id: d.id, ...d.data() } as TrackSubmission))),
@@ -663,7 +663,7 @@ export function subscribeRecentSubmissions(
 ): () => void {
   return onSnapshot(
     query(
-      collection(db, 'tracks', trackId, 'submissions'),
+      collection(requireFirestoreDb(), 'tracks', trackId, 'submissions'),
       orderBy('submittedAt', 'desc'),
       limit(8)
     ),
@@ -679,7 +679,7 @@ export function subscribeUserSubmissions(
 ): () => void {
   return onSnapshot(
     query(
-      collection(db, 'tracks', trackId, 'submissions'),
+      collection(requireFirestoreDb(), 'tracks', trackId, 'submissions'),
       where('userId', '==', userId),
       orderBy('submittedAt', 'desc')
     ),
@@ -695,7 +695,7 @@ export async function awardBadge(
   trackId: string,
   trackTitle: string
 ): Promise<void> {
-  const badgeRef = doc(db, 'users', userId, 'badges', trackId)
+  const badgeRef = doc(requireFirestoreDb(), 'users', userId, 'badges', trackId)
   const existing = await getDoc(badgeRef)
   if (existing.exists()) return
   await setDoc(badgeRef, {
@@ -713,7 +713,7 @@ export function subscribeBadges(
   onUpdate: (badges: UserBadge[]) => void
 ): () => void {
   return onSnapshot(
-    collection(db, 'users', userId, 'badges'),
+    collection(requireFirestoreDb(), 'users', userId, 'badges'),
     (snap) => onUpdate(snap.docs.map((d) => ({ id: d.id, ...d.data() } as UserBadge))),
     console.warn
   )

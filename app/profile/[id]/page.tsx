@@ -38,7 +38,7 @@ import { actorFromKhojUser, actorFromPortfolioUser, followUser, unfollowUser } f
 import { NetworkStatsRow } from '@/components/profile/NetworkStatsRow'
 import { InviteModal } from '@/components/jobs/InviteModal'
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { MediaDoc, formatDuration, formatViews, timeAgo } from '@/services/mediaService'
 import toast from 'react-hot-toast'
 
@@ -376,7 +376,7 @@ function CreatorMediaSection({ uid }: { uid: string }) {
   useEffect(() => {
     if (!uid) return
     getDocs(
-      query(collection(db, 'media'),
+      query(collection(requireFirestoreDb(), 'media'),
         where('creatorId', '==', uid),
         where('status', '==', 'published'),
         where('visibility', '==', 'public'),

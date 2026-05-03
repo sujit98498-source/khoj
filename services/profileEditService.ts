@@ -5,8 +5,8 @@
 //
 //  Firestore (recommended for this stack):
 //    import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-//    import { db } from '@/lib/firebase/config'
-//    const ref = doc(db, 'portfolios', uid)
+//    import { requireFirestoreDb } from '@/lib/firebase/config'
+//    const ref = doc(requireFirestoreDb(), 'portfolios', uid)
 //    await setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true })
 //
 //  Supabase:
@@ -19,7 +19,7 @@
 //
 //  Firebase Storage (recommended):
 //    import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
-//    const snap = await uploadBytes(storageRef(storage, `avatars/${uid}`), file)
+//    const snap = await uploadBytes(storageRef(requireFirebaseStorage(), `avatars/${uid}`), file)
 //    const url  = await getDownloadURL(snap.ref)
 //    // Then save url into PortfolioUser.avatarUrl via saveProfileData()
 //

@@ -28,7 +28,7 @@ import {
   getDownloadURL,
   UploadTaskSnapshot,
 } from 'firebase/storage'
-import { db, storage } from '@/lib/firebase/config'
+import { requireFirestoreDb, requireFirebaseStorage } from '@/lib/firebase/config'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -158,7 +158,7 @@ function uploadFile(
   onProgress: (pct: number) => void,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
-    const storageRef = ref(storage, storagePath)
+    const storageRef = ref(requireFirebaseStorage(), storagePath)
     const task = uploadBytesResumable(storageRef, file)
 
     task.on(
@@ -241,7 +241,7 @@ export async function uploadMedia(
 
     // ── 3. Write Firestore document ─────────────────────────────────────────
     onProgress({ stage: 'saving', percent: 100 })
-    const colRef = collection(db, 'media')
+    const colRef = collection(requireFirestoreDb(), 'media')
     const docRef = await addDoc(colRef, {
       // Content type + identity
       type,
@@ -296,7 +296,7 @@ export function subscribeMediaByType(
   callback: (items: MediaDoc[]) => void,
 ): () => void {
   const q = query(
-    collection(db, 'media'),
+    collection(requireFirestoreDb(), 'media'),
     where('type', '==', type),
     where('status', '==', 'published'),
     where('visibility', '==', 'public'),
@@ -324,7 +324,7 @@ export function subscribeMediaByType(
 // ── Get single media doc ──────────────────────────────────────────────────────
 
 export async function getMedia(mediaId: string): Promise<MediaDoc | null> {
-  const snap = await getDoc(doc(db, 'media', mediaId))
+  const snap = await getDoc(doc(requireFirestoreDb(), 'media', mediaId))
   if (!snap.exists()) return null
   return toMediaDoc(snap.id, snap.data() as Record<string, unknown>)
 }
@@ -332,7 +332,7 @@ export async function getMedia(mediaId: string): Promise<MediaDoc | null> {
 // ── Increment view count (once per session guard in the component) ────────────
 
 export async function incrementViews(mediaId: string): Promise<void> {
-  await updateDoc(doc(db, 'media', mediaId), {
+  await updateDoc(doc(requireFirestoreDb(), 'media', mediaId), {
     views: increment(1),
   })
 }
@@ -341,7 +341,7 @@ export async function incrementViews(mediaId: string): Promise<void> {
 
 /** Returns true if the given user has already liked this media. */
 export async function getUserLike(mediaId: string, userId: string): Promise<boolean> {
-  const snap = await getDoc(doc(db, 'media', mediaId, 'likes', userId))
+  const snap = await getDoc(doc(requireFirestoreDb(), 'media', mediaId, 'likes', userId))
   return snap.exists()
 }
 
@@ -355,8 +355,8 @@ export async function toggleLike(
   userId: string,
   liked: boolean,
 ): Promise<void> {
-  const likeRef = doc(db, 'media', mediaId, 'likes', userId)
-  const mediaRef = doc(db, 'media', mediaId)
+  const likeRef = doc(requireFirestoreDb(), 'media', mediaId, 'likes', userId)
+  const mediaRef = doc(requireFirestoreDb(), 'media', mediaId)
   if (liked) {
     await setDoc(likeRef, { createdAt: serverTimestamp() })
     await updateDoc(mediaRef, { likes: increment(1) })
@@ -374,7 +374,7 @@ export async function getRelatedMedia(
   type: MediaType,
 ): Promise<MediaDoc[]> {
   const q = query(
-    collection(db, 'media'),
+    collection(requireFirestoreDb(), 'media'),
     where('category', '==', category),
     where('type', '==', type),
     where('status', '==', 'published'),
@@ -482,7 +482,7 @@ export async function addComment(
 ): Promise<void> {
   const trimmed = text.trim()
   if (!trimmed) return
-  await addDoc(collection(db, 'media', mediaId, 'comments'), {
+  await addDoc(collection(requireFirestoreDb(), 'media', mediaId, 'comments'), {
     text: trimmed,
     authorId: author.uid,
     authorName: author.name,
@@ -500,7 +500,7 @@ export async function getCommentLike(
   commentId: string,
   userId: string,
 ): Promise<boolean> {
-  const snap = await getDoc(doc(db, 'media', mediaId, 'comments', commentId, 'likes', userId))
+  const snap = await getDoc(doc(requireFirestoreDb(), 'media', mediaId, 'comments', commentId, 'likes', userId))
   return snap.exists()
 }
 
@@ -510,8 +510,8 @@ export async function toggleCommentLike(
   userId: string,
   liked: boolean,
 ): Promise<void> {
-  const likeRef = doc(db, 'media', mediaId, 'comments', commentId, 'likes', userId)
-  const commentRef = doc(db, 'media', mediaId, 'comments', commentId)
+  const likeRef = doc(requireFirestoreDb(), 'media', mediaId, 'comments', commentId, 'likes', userId)
+  const commentRef = doc(requireFirestoreDb(), 'media', mediaId, 'comments', commentId)
   if (liked) {
     await setDoc(likeRef, { createdAt: serverTimestamp() })
     await updateDoc(commentRef, { likes: increment(1) })
@@ -531,14 +531,14 @@ export async function addReply(
 ): Promise<void> {
   const trimmed = text.trim()
   if (!trimmed) return
-  await addDoc(collection(db, 'media', mediaId, 'comments', commentId, 'replies'), {
+  await addDoc(collection(requireFirestoreDb(), 'media', mediaId, 'comments', commentId, 'replies'), {
     text: trimmed,
     authorId: author.uid,
     authorName: author.name,
     authorPhoto: author.photo,
     createdAt: serverTimestamp(),
   })
-  await updateDoc(doc(db, 'media', mediaId, 'comments', commentId), {
+  await updateDoc(doc(requireFirestoreDb(), 'media', mediaId, 'comments', commentId), {
     replyCount: increment(1),
   })
 }
@@ -549,7 +549,7 @@ export function subscribeReplies(
   callback: (replies: CommentReply[]) => void,
 ): () => void {
   const q = query(
-    collection(db, 'media', mediaId, 'comments', commentId, 'replies'),
+    collection(requireFirestoreDb(), 'media', mediaId, 'comments', commentId, 'replies'),
     orderBy('createdAt', 'asc'),
   )
   return onSnapshot(
@@ -565,7 +565,7 @@ export function subscribeReplies(
 }
 
 export async function deleteComment(mediaId: string, commentId: string): Promise<void> {
-  await deleteDoc(doc(db, 'media', mediaId, 'comments', commentId))
+  await deleteDoc(doc(requireFirestoreDb(), 'media', mediaId, 'comments', commentId))
 }
 
 export async function deleteReply(
@@ -573,8 +573,8 @@ export async function deleteReply(
   commentId: string,
   replyId: string,
 ): Promise<void> {
-  await deleteDoc(doc(db, 'media', mediaId, 'comments', commentId, 'replies', replyId))
-  await updateDoc(doc(db, 'media', mediaId, 'comments', commentId), {
+  await deleteDoc(doc(requireFirestoreDb(), 'media', mediaId, 'comments', commentId, 'replies', replyId))
+  await updateDoc(doc(requireFirestoreDb(), 'media', mediaId, 'comments', commentId), {
     replyCount: increment(-1),
   })
 }
@@ -584,7 +584,7 @@ export function subscribeComments(
   callback: (comments: MediaComment[]) => void,
 ): () => void {
   const q = query(
-    collection(db, 'media', mediaId, 'comments'),
+    collection(requireFirestoreDb(), 'media', mediaId, 'comments'),
     orderBy('createdAt', 'asc'),
   )
   return onSnapshot(

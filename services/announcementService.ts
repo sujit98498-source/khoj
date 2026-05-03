@@ -13,7 +13,7 @@ import {
   Unsubscribe,
   limit,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { Announcement } from '@/lib/types'
 
@@ -36,7 +36,7 @@ export interface CreateAnnouncementInput {
 }
 
 export async function createAnnouncement(input: CreateAnnouncementInput): Promise<string> {
-  const ref = await addDoc(collection(db, COLLECTIONS.ANNOUNCEMENTS), {
+  const ref = await addDoc(collection(requireFirestoreDb(), COLLECTIONS.ANNOUNCEMENTS), {
     ...input,
     createdAt: new Date().toISOString(),
   })
@@ -45,7 +45,7 @@ export async function createAnnouncement(input: CreateAnnouncementInput): Promis
 
 export async function getAnnouncements(count: number = 20): Promise<Announcement[]> {
   const q = query(
-    collection(db, COLLECTIONS.ANNOUNCEMENTS),
+    collection(requireFirestoreDb(), COLLECTIONS.ANNOUNCEMENTS),
     orderBy('createdAt', 'desc'),
     limit(count)
   )
@@ -54,7 +54,7 @@ export async function getAnnouncements(count: number = 20): Promise<Announcement
 }
 
 export async function deleteAnnouncement(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLLECTIONS.ANNOUNCEMENTS, id))
+  await deleteDoc(doc(requireFirestoreDb(), COLLECTIONS.ANNOUNCEMENTS, id))
 }
 
 export function subscribeToAnnouncements(
@@ -62,7 +62,7 @@ export function subscribeToAnnouncements(
   count: number = 10
 ): Unsubscribe {
   const q = query(
-    collection(db, COLLECTIONS.ANNOUNCEMENTS),
+    collection(requireFirestoreDb(), COLLECTIONS.ANNOUNCEMENTS),
     orderBy('createdAt', 'desc'),
     limit(count)
   )

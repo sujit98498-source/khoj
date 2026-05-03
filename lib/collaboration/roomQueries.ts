@@ -15,7 +15,7 @@ import {
   QueryConstraint,
   collectionGroup,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLAB_COLLECTIONS as C } from './collabCollections'
 import type {
   CollabRoom,
@@ -40,7 +40,7 @@ function withId<T>(docSnap: { id: string; data(): unknown }): T {
 // ── Room ──────────────────────────────────────────────────────────────────────
 export async function getCollabRoom(roomId: string): Promise<CollabRoom | null> {
   try {
-    const snap = await getDoc(doc(db, C.ROOMS, roomId))
+    const snap = await getDoc(doc(requireFirestoreDb(), C.ROOMS, roomId))
     if (!snap.exists()) return null
     return withId<CollabRoom>(snap)
   } catch (err) {
@@ -74,7 +74,7 @@ export function subscribeStartupRooms(
     constraints.splice(-2, 0, where('isRecruiting', '==', true))
   }
 
-  const q = query(collection(db, C.ROOMS), ...constraints)
+  const q = query(collection(requireFirestoreDb(), C.ROOMS), ...constraints)
   return onSnapshot(q, (snap) => {
     let rooms = snap.docs.map((d) => withId<CollabRoom>(d))
 
@@ -102,7 +102,7 @@ export function subscribeCollabRoom(
   onChange: (room: CollabRoom | null) => void,
 ): () => void {
   return onSnapshot(
-    doc(db, C.ROOMS, roomId),
+    doc(requireFirestoreDb(), C.ROOMS, roomId),
     (snap) => { onChange(snap.exists() ? withId<CollabRoom>(snap) : null) },
     (err) => {
       // Permission denied on legacy room ID → treat as null (not a collab room)
@@ -118,7 +118,7 @@ export function subscribeRoomMembers(
   onChange: (members: RoomMember[]) => void,
 ): () => void {
   const q = query(
-    collection(db, C.ROOMS, roomId, C.MEMBERS),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.MEMBERS),
     where('status', 'in', ['active', 'trial']),
   )
   return onSnapshot(q, (snap) => {
@@ -127,7 +127,7 @@ export function subscribeRoomMembers(
 }
 
 export async function getRoomMember(roomId: string, userId: string): Promise<RoomMember | null> {
-  const snap = await getDoc(doc(db, C.ROOMS, roomId, C.MEMBERS, userId))
+  const snap = await getDoc(doc(requireFirestoreDb(), C.ROOMS, roomId, C.MEMBERS, userId))
   if (!snap.exists()) return null
   return withId<RoomMember>(snap)
 }
@@ -140,7 +140,7 @@ export function subscribeStartupRoles(
   // NOTE: No compound where+orderBy — that would require a composite index.
   // We fetch the full collection and sort/filter client-side instead.
   const q = query(
-    collection(db, C.ROOMS, roomId, C.ROLES),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.ROLES),
   )
   return onSnapshot(
     q,
@@ -169,7 +169,7 @@ export function subscribeRoleApplications(
   onChange: (applications: import('@/types/collaboration').RoleApplication[]) => void,
 ): () => void {
   const q = query(
-    collection(db, C.ROOMS, roomId, C.ROLE_APPLICATIONS),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.ROLE_APPLICATIONS),
     orderBy('createdAt', 'desc'),
   )
   return onSnapshot(
@@ -190,7 +190,7 @@ export function subscribeMyRoleApplications(
   onChange: (applications: import('@/types/collaboration').RoleApplication[]) => void,
 ): () => void {
   const q = query(
-    collection(db, C.ROOMS, roomId, C.ROLE_APPLICATIONS),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.ROLE_APPLICATIONS),
     where('applicantId', '==', userId),
     orderBy('createdAt', 'desc'),
   )
@@ -208,7 +208,7 @@ export function subscribeRoomJoinRequests(
   onChange: (requests: JoinRequest[]) => void,
 ): () => void {
   const q = query(
-    collection(db, C.ROOMS, roomId, C.JOIN_REQUESTS),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.JOIN_REQUESTS),
     where('status', '==', 'pending'),
     orderBy('createdAt', 'desc'),
   )
@@ -223,7 +223,7 @@ export function subscribeUserJoinRequests(
   onChange: (requests: JoinRequest[]) => void,
 ): () => void {
   const q = query(
-    collectionGroup(db, C.JOIN_REQUESTS),
+    collectionGroup(requireFirestoreDb(), C.JOIN_REQUESTS),
     where('userId', '==', userId),
     where('status', '==', 'pending'),
     orderBy('createdAt', 'desc'),
@@ -240,7 +240,7 @@ export function subscribeUserInvites(
   onChange: (invites: StartupInvite[]) => void,
 ): () => void {
   const q = query(
-    collectionGroup(db, C.INVITES),
+    collectionGroup(requireFirestoreDb(), C.INVITES),
     where('targetUserId', '==', targetUserId),
     where('status', '==', 'pending'),
     orderBy('createdAt', 'desc'),
@@ -256,7 +256,7 @@ export function subscribeRoomInvites(
   onChange: (invites: StartupInvite[]) => void,
 ): () => void {
   const q = query(
-    collection(db, C.ROOMS, roomId, C.INVITES),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.INVITES),
     where('status', '==', 'pending'),
     orderBy('createdAt', 'desc'),
   )
@@ -271,7 +271,7 @@ export function subscribeRoomAssets(
   onChange: (assets: RoomAsset[]) => void,
 ): () => void {
   const q = query(
-    collection(db, C.ROOMS, roomId, C.ASSETS),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.ASSETS),
     orderBy('createdAt', 'desc'),
   )
   return onSnapshot(q, (snap) => {
@@ -285,7 +285,7 @@ export function subscribeRoomSessions(
   onChange: (sessions: StartupSession[]) => void,
 ): () => void {
   const q = query(
-    collection(db, C.ROOMS, roomId, C.SESSIONS),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.SESSIONS),
     where('status', 'in', ['scheduled', 'live']),
     orderBy('createdAt', 'desc'),
     limit(10),
@@ -301,7 +301,7 @@ export function subscribeMilestones(
   onChange: (milestones: Milestone[]) => void,
 ): () => void {
   const q = query(
-    collection(db, C.ROOMS, roomId, C.MILESTONES),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.MILESTONES),
     orderBy('createdAt', 'asc'),
   )
   return onSnapshot(q, (snap) => {
@@ -311,7 +311,7 @@ export function subscribeMilestones(
 
 // ── Startup profiles ──────────────────────────────────────────────────────────
 export async function getStartupProfile(userId: string): Promise<StartupProfile | null> {
-  const snap = await getDoc(doc(db, C.STARTUP_PROFILES, userId))
+  const snap = await getDoc(doc(requireFirestoreDb(), C.STARTUP_PROFILES, userId))
   if (!snap.exists()) return null
   return snap.data() as StartupProfile
 }
@@ -319,7 +319,7 @@ export async function getStartupProfile(userId: string): Promise<StartupProfile 
 export async function getPublicStartupProfiles(limitCount = 50): Promise<StartupProfile[]> {
   const snap = await getDocs(
     query(
-      collection(db, C.STARTUP_PROFILES),
+      collection(requireFirestoreDb(), C.STARTUP_PROFILES),
       where('visibility', '==', 'public'),
       limit(limitCount),
     ),
@@ -333,7 +333,7 @@ export function subscribeUserMemberships(
   onChange: (memberships: UserRoomMembership[]) => void,
 ): () => void {
   const q = query(
-    collection(db, 'users', userId, C.ROOM_MEMBERSHIPS),
+    collection(requireFirestoreDb(), 'users', userId, C.ROOM_MEMBERSHIPS),
     where('status', '==', 'active'),
     orderBy('joinedAt', 'desc'),
   )
@@ -348,7 +348,7 @@ export function subscribeFounderInboxCounts(
   onChange: (counts: { pendingRequests: number }) => void,
 ): () => void {
   const q = query(
-    collection(db, C.ROOMS, roomId, C.JOIN_REQUESTS),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.JOIN_REQUESTS),
     where('status', '==', 'pending'),
   )
   return onSnapshot(q, (snap) => {
@@ -363,7 +363,7 @@ export function subscribeAccessRequests(
   onChange: (requests: AccessRequest[]) => void,
 ): () => void {
   const q = query(
-    collection(db, C.ROOMS, roomId, C.ACCESS_REQUESTS),
+    collection(requireFirestoreDb(), C.ROOMS, roomId, C.ACCESS_REQUESTS),
     orderBy('createdAt', 'desc'),
   )
   return onSnapshot(
@@ -379,7 +379,7 @@ export function subscribeMyAccess(
   userId: string,
   onChange: (access: RoomAccess | null) => void,
 ): () => void {
-  const docRef = doc(db, C.ROOMS, roomId, C.ACCESS, userId)
+  const docRef = doc(requireFirestoreDb(), C.ROOMS, roomId, C.ACCESS, userId)
   return onSnapshot(
     docRef,
     (snap) => onChange(snap.exists() ? (snap.data() as RoomAccess) : null),
@@ -395,7 +395,7 @@ export function subscribeMyAccess(
 export async function getUserMemberships(userId: string): Promise<UserRoomMembership[]> {
   const snap = await getDocs(
     query(
-      collection(db, 'users', userId, C.ROOM_MEMBERSHIPS),
+      collection(requireFirestoreDb(), 'users', userId, C.ROOM_MEMBERSHIPS),
       where('status', '==', 'active'),
       orderBy('joinedAt', 'desc'),
     ),
@@ -419,7 +419,7 @@ export async function getPortfolioActivities(
 ): Promise<PortfolioActivity[]> {
   const snap = await getDocs(
     query(
-      collection(db, 'users', userId, 'portfolioActivities'),
+      collection(requireFirestoreDb(), 'users', userId, 'portfolioActivities'),
       orderBy('createdAt', 'desc'),
       limit(limitCount),
     ),
@@ -436,6 +436,6 @@ export async function getOpenOpportunities(
 ): Promise<Opportunity[]> {
   const constraints: QueryConstraint[] = [where('status', '==', 'open'), limit(limitCount)]
   if (type) constraints.unshift(where('type', '==', type))
-  const snap = await getDocs(query(collection(db, 'opportunities'), ...constraints))
+  const snap = await getDocs(query(collection(requireFirestoreDb(), 'opportunities'), ...constraints))
   return snap.docs.map((d) => ({ ...(d.data() as object), id: d.id } as Opportunity))
 }

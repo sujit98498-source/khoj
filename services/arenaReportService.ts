@@ -3,7 +3,7 @@
 // Schema is compatible with admin review dashboard.
 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 
 export type ReportTargetType = 'stream' | 'video' | 'clip'
 
@@ -34,7 +34,7 @@ export interface ArenaReportPayload {
 export async function submitArenaReport(
   payload: ArenaReportPayload
 ): Promise<void> {
-  await addDoc(collection(db, 'reports'), {
+  await addDoc(collection(requireFirestoreDb(), 'reports'), {
     ...payload,
     createdAt: serverTimestamp(),
     status: 'open',

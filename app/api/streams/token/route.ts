@@ -31,13 +31,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const apiKey = process.env.LIVEKIT_API_KEY
-    const apiSecret = process.env.LIVEKIT_API_SECRET
+    const apiKey = process.env.LIVEKIT_API_KEY?.trim()
+    const apiSecret = process.env.LIVEKIT_API_SECRET?.trim()
+    const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL?.trim()
 
-    if (!apiKey || !apiSecret) {
+    if (!apiKey || !apiSecret || !livekitUrl) {
       return NextResponse.json(
-        { error: 'LiveKit credentials are not configured on the server' },
-        { status: 500 }
+        { error: 'LiveKit not configured' },
+        { status: 503 }
       )
     }
 
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       token: await token.toJwt(),
-      url: process.env.NEXT_PUBLIC_LIVEKIT_URL,
+      url: livekitUrl,
     })
   } catch (error) {
     console.error('[streams/token] Error:', error)

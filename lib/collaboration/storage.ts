@@ -8,7 +8,7 @@ import {
   deleteObject,
   UploadTaskSnapshot,
 } from 'firebase/storage'
-import { storage } from '@/lib/firebase/config'
+import { requireFirebaseStorage } from '@/lib/firebase/config'
 import { ALLOWED_ASSET_MIME_TYPES, ASSET_MAX_BYTES } from './roomTypes'
 import type { AssetType } from '@/types/collaboration'
 
@@ -53,7 +53,7 @@ export function uploadRoomAsset(
   return new Promise((resolve, reject) => {
     // Path must match storage.rules: rooms/{roomId}/assets/{assetId}/...
     const storagePath = `rooms/${roomId}/assets/${assetId}/${file.name}`
-    const storageRef = ref(storage, storagePath)
+    const storageRef = ref(requireFirebaseStorage(), storagePath)
 
     const task = uploadBytesResumable(storageRef, file, {
       contentType: file.type,
@@ -84,5 +84,5 @@ export function uploadRoomAsset(
 
 // ── Delete a room asset from storage ─────────────────────────────────────────
 export async function deleteRoomAssetFile(storagePath: string): Promise<void> {
-  await deleteObject(ref(storage, storagePath))
+  await deleteObject(ref(requireFirebaseStorage(), storagePath))
 }

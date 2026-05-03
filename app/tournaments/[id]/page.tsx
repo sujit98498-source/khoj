@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { useParams } from 'next/navigation'
 import { doc, getDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { getMatchesByTournament } from '@/services/matchService'
 import { startTournamentEsewaPayment } from '@/services/paymentService'
@@ -78,7 +78,7 @@ export default function TournamentDetailPage() {
     setError(null)
 
     try {
-      const ref = doc(db, COLLECTIONS.TOURNAMENTS, id)
+      const ref = doc(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS, id)
       const snap = await getDoc(ref)
 
       if (!snap.exists()) {

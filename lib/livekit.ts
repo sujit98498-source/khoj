@@ -8,7 +8,7 @@
  * or show a "LiveKit not configured" placeholder.
  */
 export function isLiveKitConfigured(): boolean {
-  return !!process.env.NEXT_PUBLIC_LIVEKIT_URL
+  return Boolean(process.env.NEXT_PUBLIC_LIVEKIT_URL?.trim())
 }
 
 /**

@@ -57,7 +57,9 @@ export function AdminSidebar({ adminUser }: AdminSidebarProps) {
 
   const handleLogout = async () => {
     document.cookie = 'khoj-auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-    await signOut(auth)
+    if (auth) {
+      await signOut(auth)
+    }
     toast.success('Signed out')
     router.push('/auth/login')
   }

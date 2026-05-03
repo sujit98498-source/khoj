@@ -7,7 +7,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { StreamCategory } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import toast from 'react-hot-toast'
@@ -66,7 +66,7 @@ export function CreateStreamModal({
     try {
       console.log('[CreateStreamModal] Creating stream for hostId:', hostId)
 
-      const docRef = await addDoc(collection(db, 'streams'), {
+      const docRef = await addDoc(collection(requireFirestoreDb(), 'streams'), {
         title: title.trim(),
         description: description.trim(),
         category,

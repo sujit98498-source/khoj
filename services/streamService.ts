@@ -26,7 +26,7 @@ import {
   limit,
   Unsubscribe,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { Stream, StreamMessage, StreamCategory, JoinRequest, StreamParticipant } from '@/lib/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ export interface CreateStreamPayload {
 }
 
 export async function createStream(payload: CreateStreamPayload): Promise<string> {
-  const streamsRef = collection(db, 'streams')
+  const streamsRef = collection(requireFirestoreDb(), 'streams')
   const docRef = await addDoc(streamsRef, {
     title: payload.title.trim(),
     description: payload.description.trim(),
@@ -113,7 +113,7 @@ export async function createStream(payload: CreateStreamPayload): Promise<string
 // ── Get Single Stream ─────────────────────────────────────────────────────────
 
 export async function getStreamById(streamId: string): Promise<Stream | null> {
-  const docRef = doc(db, 'streams', streamId)
+  const docRef = doc(requireFirestoreDb(), 'streams', streamId)
   const snap = await getDoc(docRef)
   if (!snap.exists()) return null
   return toStream(snap.id, snap.data() as Record<string, unknown>)
@@ -126,7 +126,7 @@ export async function updateStreamThumbnail(
   streamId: string,
   thumbnailUrl: string
 ): Promise<void> {
-  const docRef = doc(db, 'streams', streamId)
+  const docRef = doc(requireFirestoreDb(), 'streams', streamId)
   await updateDoc(docRef, { thumbnailUrl })
 }
 
@@ -138,7 +138,7 @@ export function subscribeLiveStreams(
   onUpdate: (streams: Stream[]) => void
 ): Unsubscribe {
   const q = query(
-    collection(db, 'streams'),
+    collection(requireFirestoreDb(), 'streams'),
     where('status', '==', 'live'),
     limit(100)
   )
@@ -165,7 +165,7 @@ export function subscribeStream(
   streamId: string,
   onUpdate: (stream: Stream | null) => void
 ): Unsubscribe {
-  const docRef = doc(db, 'streams', streamId)
+  const docRef = doc(requireFirestoreDb(), 'streams', streamId)
   return onSnapshot(docRef, (snap) => {
     if (!snap.exists()) {
       onUpdate(null)
@@ -178,7 +178,7 @@ export function subscribeStream(
 // ── End Stream ────────────────────────────────────────────────────────────────
 
 export async function endStream(streamId: string): Promise<void> {
-  const docRef = doc(db, 'streams', streamId)
+  const docRef = doc(requireFirestoreDb(), 'streams', streamId)
   await updateDoc(docRef, {
     status: 'ended',
     endedAt: serverTimestamp(),
@@ -188,14 +188,14 @@ export async function endStream(streamId: string): Promise<void> {
 // ── Viewer Count ──────────────────────────────────────────────────────────────
 
 export async function incrementViewerCount(streamId: string): Promise<void> {
-  const docRef = doc(db, 'streams', streamId)
+  const docRef = doc(requireFirestoreDb(), 'streams', streamId)
   await updateDoc(docRef, { viewerCount: increment(1) })
 }
 
 export async function decrementViewerCount(streamId: string): Promise<void> {
-  const docRef = doc(db, 'streams', streamId)
+  const docRef = doc(requireFirestoreDb(), 'streams', streamId)
   // Use transaction to prevent negative count
-  await runTransaction(db, async (tx) => {
+  await runTransaction(requireFirestoreDb(), async (tx) => {
     const snap = await tx.get(docRef)
     if (!snap.exists()) return
     const current = (snap.data().viewerCount as number) ?? 0
@@ -211,7 +211,7 @@ export async function sendMessage(
 ): Promise<void> {
   const text = payload.text.trim()
   if (!text) return
-  const messagesRef = collection(db, 'streams', streamId, 'messages')
+  const messagesRef = collection(requireFirestoreDb(), 'streams', streamId, 'messages')
   await addDoc(messagesRef, {
     userId: payload.userId,
     userName: payload.userName,
@@ -228,7 +228,7 @@ export function subscribeMessages(
   onUpdate: (messages: StreamMessage[]) => void
 ): Unsubscribe {
   const q = query(
-    collection(db, 'streams', streamId, 'messages'),
+    collection(requireFirestoreDb(), 'streams', streamId, 'messages'),
     where('isDeleted', '==', false),
     orderBy('createdAt', 'asc'),
     limit(200)
@@ -276,7 +276,7 @@ export async function sendJoinRequest(
   // a new request and we avoid depending on a compound/in query.
   const existing = await getDocs(
     query(
-      collection(db, 'streams', streamId, 'joinRequests'),
+      collection(requireFirestoreDb(), 'streams', streamId, 'joinRequests'),
       where('userId', '==', payload.userId)
     )
   )
@@ -293,7 +293,7 @@ export async function sendJoinRequest(
     )
   }
 
-  const ref = await addDoc(collection(db, 'streams', streamId, 'joinRequests'), {
+  const ref = await addDoc(collection(requireFirestoreDb(), 'streams', streamId, 'joinRequests'), {
     userId: payload.userId,
     userName: payload.userName,
     userPhoto: payload.userPhoto,
@@ -314,7 +314,7 @@ export function subscribeJoinRequests(
   onUpdate: (requests: JoinRequest[]) => void
 ): Unsubscribe {
   const q = query(
-    collection(db, 'streams', streamId, 'joinRequests'),
+    collection(requireFirestoreDb(), 'streams', streamId, 'joinRequests'),
     where('status', '==', 'pending')
   )
   return onSnapshot(q, (snap) => {
@@ -336,7 +336,7 @@ export function subscribeMyJoinRequest(
   onUpdate: (request: JoinRequest | null) => void
 ): Unsubscribe {
   const q = query(
-    collection(db, 'streams', streamId, 'joinRequests'),
+    collection(requireFirestoreDb(), 'streams', streamId, 'joinRequests'),
     where('userId', '==', userId)
   )
   return onSnapshot(q, (snap) => {
@@ -360,9 +360,9 @@ export async function acceptJoinRequest(
   streamId: string,
   request: JoinRequest
 ): Promise<void> {
-  const batch = writeBatch(db)
-  const requestRef = doc(db, 'streams', streamId, 'joinRequests', request.id)
-  const participantRef = doc(db, 'streams', streamId, 'participants', request.userId)
+  const batch = writeBatch(requireFirestoreDb())
+  const requestRef = doc(requireFirestoreDb(), 'streams', streamId, 'joinRequests', request.id)
+  const participantRef = doc(requireFirestoreDb(), 'streams', streamId, 'participants', request.userId)
 
   batch.update(requestRef, {
     status: 'accepted',
@@ -388,7 +388,7 @@ export async function declineJoinRequest(
   streamId: string,
   requestId: string
 ): Promise<void> {
-  const requestRef = doc(db, 'streams', streamId, 'joinRequests', requestId)
+  const requestRef = doc(requireFirestoreDb(), 'streams', streamId, 'joinRequests', requestId)
   await updateDoc(requestRef, {
     status: 'declined',
     respondedAt: serverTimestamp(),
@@ -419,7 +419,7 @@ export function subscribeParticipants(
   onUpdate: (participants: StreamParticipant[]) => void
 ): Unsubscribe {
   const q = query(
-    collection(db, 'streams', streamId, 'participants'),
+    collection(requireFirestoreDb(), 'streams', streamId, 'participants'),
     orderBy('joinedAt', 'asc')
   )
   return onSnapshot(q, (snap) => {
@@ -437,7 +437,7 @@ export async function ensureHostParticipant(
   streamId: string,
   host: { userId: string; userName: string; userPhoto: string }
 ): Promise<void> {
-  const ref = doc(db, 'streams', streamId, 'participants', host.userId)
+  const ref = doc(requireFirestoreDb(), 'streams', streamId, 'participants', host.userId)
   const snap = await getDoc(ref)
   if (!snap.exists()) {
     await setDoc(ref, {
@@ -456,9 +456,9 @@ export async function ensureHostParticipant(
  * cleanly request again later without seeing a stale 'declined' toast.
  */
 export async function leaveAsGuest(streamId: string, userId: string): Promise<void> {
-  await deleteDoc(doc(db, 'streams', streamId, 'participants', userId))
+  await deleteDoc(doc(requireFirestoreDb(), 'streams', streamId, 'participants', userId))
   const q = query(
-    collection(db, 'streams', streamId, 'joinRequests'),
+    collection(requireFirestoreDb(), 'streams', streamId, 'joinRequests'),
     where('userId', '==', userId)
   )
   const snap = await getDocs(q)
@@ -469,10 +469,10 @@ export async function leaveAsGuest(streamId: string, userId: string): Promise<vo
  * Host removes a guest from the stream.
  */
 export async function removeGuest(streamId: string, guestUserId: string): Promise<void> {
-  await deleteDoc(doc(db, 'streams', streamId, 'participants', guestUserId))
+  await deleteDoc(doc(requireFirestoreDb(), 'streams', streamId, 'participants', guestUserId))
   // Mark their request as declined so they know
   const q = query(
-    collection(db, 'streams', streamId, 'joinRequests'),
+    collection(requireFirestoreDb(), 'streams', streamId, 'joinRequests'),
     where('userId', '==', guestUserId),
     where('status', '==', 'accepted')
   )
@@ -490,9 +490,9 @@ export async function removeGuest(streamId: string, guestUserId: string): Promis
  * Returns the new liked state: true = now liked, false = now unliked.
  */
 export async function toggleLike(streamId: string, userId: string): Promise<boolean> {
-  const likeRef = doc(db, 'streams', streamId, 'likes', userId)
-  const streamRef = doc(db, 'streams', streamId)
-  return runTransaction(db, async (tx) => {
+  const likeRef = doc(requireFirestoreDb(), 'streams', streamId, 'likes', userId)
+  const streamRef = doc(requireFirestoreDb(), 'streams', streamId)
+  return runTransaction(requireFirestoreDb(), async (tx) => {
     const likeSnap = await tx.get(likeRef)
     if (likeSnap.exists()) {
       // Unlike
@@ -518,7 +518,7 @@ export function subscribeUserLike(
   userId: string,
   onUpdate: (liked: boolean) => void
 ): Unsubscribe {
-  const likeRef = doc(db, 'streams', streamId, 'likes', userId)
+  const likeRef = doc(requireFirestoreDb(), 'streams', streamId, 'likes', userId)
   return onSnapshot(likeRef, (snap) => {
     onUpdate(snap.exists())
   })
@@ -543,14 +543,14 @@ export interface FollowPayload {
  */
 export async function toggleFollow(payload: FollowPayload): Promise<boolean> {
   const followingRef = doc(
-    db,
+    requireFirestoreDb(),
     'users',
     payload.currentUserId,
     'following',
     payload.targetUserId
   )
   const followerRef = doc(
-    db,
+    requireFirestoreDb(),
     'users',
     payload.targetUserId,
     'followers',
@@ -591,7 +591,7 @@ export function subscribeFollowing(
   targetUserId: string,
   onUpdate: (following: boolean) => void
 ): Unsubscribe {
-  const followingRef = doc(db, 'users', currentUserId, 'following', targetUserId)
+  const followingRef = doc(requireFirestoreDb(), 'users', currentUserId, 'following', targetUserId)
   return onSnapshot(followingRef, (snap) => {
     onUpdate(snap.exists())
   })

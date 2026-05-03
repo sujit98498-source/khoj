@@ -15,7 +15,7 @@ import {
   Timestamp,
   type Unsubscribe,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { createNotification } from '@/services/notificationService'
 import type { CallRecord, CallStatus, CallType } from '@/lib/types'
@@ -59,7 +59,7 @@ export async function startCall(
 
   console.log('[callService] startCall →', { conversationId, callerId, safeName, receiverId, type })
 
-  const ref = await addDoc(collection(db, COLLECTIONS.CALLS), {
+  const ref = await addDoc(collection(requireFirestoreDb(), COLLECTIONS.CALLS), {
     conversationId,
     roomName,
     callerId,
@@ -97,7 +97,7 @@ export async function updateCallStatus(
   callId: string,
   status: CallStatus
 ): Promise<void> {
-  const ref = doc(db, COLLECTIONS.CALLS, callId)
+  const ref = doc(requireFirestoreDb(), COLLECTIONS.CALLS, callId)
   await updateDoc(ref, { status }).catch((err) => {
     console.error('[callService] updateCallStatus failed:', callId, status, err)
   })
@@ -107,7 +107,7 @@ export async function updateCallStatus(
  * Fetch a single call record.
  */
 export async function getCallRecord(callId: string): Promise<CallRecord | null> {
-  const snap = await getDoc(doc(db, COLLECTIONS.CALLS, callId))
+  const snap = await getDoc(doc(requireFirestoreDb(), COLLECTIONS.CALLS, callId))
   if (!snap.exists()) return null
   return docToCallRecord(snap.id, snap.data() as Record<string, unknown>)
 }
@@ -122,7 +122,7 @@ export function subscribeToIncomingCalls(
   onCall: (calls: CallRecord[]) => void
 ): Unsubscribe {
   const q = query(
-    collection(db, COLLECTIONS.CALLS),
+    collection(requireFirestoreDb(), COLLECTIONS.CALLS),
     where('receiverId', '==', userId),
     where('status', '==', 'ringing')
   )
@@ -143,7 +143,7 @@ export function subscribeToCallRecord(
   callId: string,
   onUpdate: (call: CallRecord | null) => void
 ): Unsubscribe {
-  const ref = doc(db, COLLECTIONS.CALLS, callId)
+  const ref = doc(requireFirestoreDb(), COLLECTIONS.CALLS, callId)
   return onSnapshot(ref, (snap) => {
     if (!snap.exists()) { onUpdate(null); return }
     onUpdate(docToCallRecord(snap.id, snap.data() as Record<string, unknown>))

@@ -16,7 +16,7 @@ import {
   writeBatch,
   Timestamp,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLAB_COLLECTIONS as C } from './collabCollections'
 import { slugify, permissionsForRole } from './roomTypes'
 import type {
@@ -48,7 +48,7 @@ async function publishRoleAsOpportunity(
   meta: { roomTitle: string; founderName: string; founderUid: string; stage?: string; locationMode?: string },
   now: ReturnType<typeof serverTimestamp>,
 ): Promise<string> {
-  const oppRef = doc(collection(db, 'opportunities'))
+  const oppRef = doc(collection(requireFirestoreDb(), 'opportunities'))
   const oppData: Record<string, unknown> = {
     type: role.roleType === 'cofounder' ? 'cofounder' : 'startup_job',
     sourceType: 'startup_room_role',
@@ -84,7 +84,7 @@ export async function createStartupRoom(
   const now = serverTimestamp()
   const slug = slugify(payload.title)
 
-  const roomRef = doc(collection(db, C.ROOMS))
+  const roomRef = doc(collection(requireFirestoreDb(), C.ROOMS))
   const roomId = roomRef.id
 
   const roomData: Omit<CollabRoom, 'id'> = {
@@ -112,13 +112,13 @@ export async function createStartupRoom(
     privateFilesEnabled:      payload.privateFilesEnabled ?? false,
   }
 
-  const batch = writeBatch(db)
+  const batch = writeBatch(requireFirestoreDb())
 
   // Room doc
   batch.set(roomRef, roomData)
 
   // Owner member doc
-  const memberRef = doc(db, C.ROOMS, roomId, C.MEMBERS, userId)
+  const memberRef = doc(requireFirestoreDb(), C.ROOMS, roomId, C.MEMBERS, userId)
   const member: Omit<RoomMember, 'id'> = {
     userId,
     roomRole: 'owner',
@@ -131,7 +131,7 @@ export async function createStartupRoom(
   batch.set(memberRef, member)
 
   // User membership index
-  const membershipRef = doc(db, 'users', userId, C.ROOM_MEMBERSHIPS, roomId)
+  const membershipRef = doc(requireFirestoreDb(), 'users', userId, C.ROOM_MEMBERSHIPS, roomId)
   const membership: UserRoomMembership = {
     roomId,
     title: payload.title,
@@ -191,7 +191,7 @@ export async function createStartupRole(
   if (!role.description?.trim()) throw new Error('Role description is required')
 
   const now = serverTimestamp()
-  const roleRef = doc(collection(db, C.ROOMS, roomId, C.ROLES))
+  const roleRef = doc(collection(requireFirestoreDb(), C.ROOMS, roomId, C.ROLES))
   const roleId  = roleRef.id
 
   const roleData: Record<string, unknown> = {
@@ -215,7 +215,7 @@ export async function createStartupRole(
   await setDoc(roleRef, roleData)
 
   // Update open role count on the room
-  await updateDoc(doc(db, C.ROOMS, roomId), {
+  await updateDoc(doc(requireFirestoreDb(), C.ROOMS, roomId), {
     openRoleCount: increment(1),
     updatedAt: now,
   })
@@ -257,7 +257,7 @@ export async function submitRoleApplication(
   if (compensationPreference != null) payload.compensationPreference = compensationPreference
   if (introVideoLink?.trim())         payload.introVideoLink         = introVideoLink.trim()
 
-  const ref = await addDoc(collection(db, C.ROOMS, roomId, C.ROLE_APPLICATIONS), payload)
+  const ref = await addDoc(collection(requireFirestoreDb(), C.ROOMS, roomId, C.ROLE_APPLICATIONS), payload)
   console.log('Role application submitted', { id: ref.id, roomId, roleId, applicantId })
   return ref.id
 }
@@ -276,10 +276,10 @@ export async function reviewRoleApplication(
   roomTitle?: string,
 ): Promise<void> {
   const now = serverTimestamp()
-  const batch = writeBatch(db)
+  const batch = writeBatch(requireFirestoreDb())
 
   // 1. Update application status
-  batch.update(doc(db, C.ROOMS, roomId, C.ROLE_APPLICATIONS, applicationId), {
+  batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId, C.ROLE_APPLICATIONS, applicationId), {
     status: action === 'accept' ? 'accepted' : 'rejected',
     decidedAt: now,
     decidedBy: reviewerId,
@@ -287,7 +287,7 @@ export async function reviewRoleApplication(
 
   if (action === 'accept') {
     // 2. Create member doc as co-founder
-    batch.set(doc(db, C.ROOMS, roomId, C.MEMBERS, applicantId), {
+    batch.set(doc(requireFirestoreDb(), C.ROOMS, roomId, C.MEMBERS, applicantId), {
       userId: applicantId,
       roomRole: 'cofounder',
       status: 'active',
@@ -305,7 +305,7 @@ export async function reviewRoleApplication(
     })
 
     // 3. Increment room memberCount
-    batch.update(doc(db, C.ROOMS, roomId), {
+    batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId), {
       memberCount: increment(1),
       updatedAt: now,
     })
@@ -315,7 +315,7 @@ export async function reviewRoleApplication(
 
   if (action === 'accept') {
     // 4. Write user roomMembership index (own-user write, must be after batch)
-    await setDoc(doc(db, 'users', applicantId, C.ROOM_MEMBERSHIPS, roomId), {
+    await setDoc(doc(requireFirestoreDb(), 'users', applicantId, C.ROOM_MEMBERSHIPS, roomId), {
       roomId,
       title: roomTitle ?? '',
       roomType: 'startup' as const,
@@ -326,7 +326,7 @@ export async function reviewRoleApplication(
 
     // 5. Update role seatsFilled; close role if all seats now filled
     try {
-      const roleRef  = doc(db, C.ROOMS, roomId, C.ROLES, roleId)
+      const roleRef  = doc(requireFirestoreDb(), C.ROOMS, roomId, C.ROLES, roleId)
       const roleSnap = await getDoc(roleRef)
       if (roleSnap.exists()) {
         const rd          = roleSnap.data() as { seats: number; seatsFilled: number; opportunityId?: string }
@@ -338,14 +338,14 @@ export async function reviewRoleApplication(
           updatedAt: now,
         })
         if (shouldClose) {
-          await updateDoc(doc(db, C.ROOMS, roomId), {
+          await updateDoc(doc(requireFirestoreDb(), C.ROOMS, roomId), {
             openRoleCount: increment(-1),
             updatedAt: now,
           })
           // Close the linked opportunity listing if the role is now full
           if (rd.opportunityId) {
             try {
-              await updateDoc(doc(db, 'opportunities', rd.opportunityId), {
+              await updateDoc(doc(requireFirestoreDb(), 'opportunities', rd.opportunityId), {
                 status: 'closed',
                 updatedAt: now,
               })
@@ -362,7 +362,7 @@ export async function reviewRoleApplication(
 
     // 6. Write portfolio activity for the accepted applicant
     try {
-      const activityRef = doc(collection(db, 'users', applicantId, 'portfolioActivities'))
+      const activityRef = doc(collection(requireFirestoreDb(), 'users', applicantId, 'portfolioActivities'))
       await setDoc(activityRef, {
         type: 'startup_role_accepted',
         roomId,
@@ -384,7 +384,7 @@ export async function submitJoinRequest(
 ): Promise<string> {
   const now = serverTimestamp()
   const ref = await addDoc(
-    collection(db, C.ROOMS, payload.roomId, C.JOIN_REQUESTS),
+    collection(requireFirestoreDb(), C.ROOMS, payload.roomId, C.JOIN_REQUESTS),
     {
       userId,
       roleId: payload.roleId ?? null,
@@ -401,7 +401,7 @@ export async function submitJoinRequest(
     } as Omit<JoinRequest, 'id'> & Record<string, unknown>,
   )
 
-  await updateDoc(doc(db, C.ROOMS, payload.roomId), {
+  await updateDoc(doc(requireFirestoreDb(), C.ROOMS, payload.roomId), {
     pendingJoinRequestCount: increment(1),
     updatedAt: now,
   })
@@ -412,11 +412,11 @@ export async function submitJoinRequest(
 // ── Withdraw join request ─────────────────────────────────────────────────────
 export async function withdrawJoinRequest(roomId: string, requestId: string): Promise<void> {
   const now = serverTimestamp()
-  await updateDoc(doc(db, C.ROOMS, roomId, C.JOIN_REQUESTS, requestId), {
+  await updateDoc(doc(requireFirestoreDb(), C.ROOMS, roomId, C.JOIN_REQUESTS, requestId), {
     status: 'withdrawn',
     updatedAt: now,
   })
-  await updateDoc(doc(db, C.ROOMS, roomId), {
+  await updateDoc(doc(requireFirestoreDb(), C.ROOMS, roomId), {
     pendingJoinRequestCount: increment(-1),
     updatedAt: now,
   })
@@ -431,7 +431,7 @@ export async function sendStartupInvite(
 ): Promise<string> {
   const now = serverTimestamp()
   const ref = await addDoc(
-    collection(db, C.ROOMS, room.id, C.INVITES),
+    collection(requireFirestoreDb(), C.ROOMS, room.id, C.INVITES),
     {
       targetUserId: payload.targetUserId,
       roleId: payload.roleId ?? null,
@@ -465,9 +465,9 @@ export async function respondToInvite(
   userSnapshot: RoomMember['profileSnapshot'],
 ): Promise<void> {
   const now = serverTimestamp()
-  const batch = writeBatch(db)
+  const batch = writeBatch(requireFirestoreDb())
 
-  batch.update(doc(db, C.ROOMS, roomId, C.INVITES, inviteId), {
+  batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId, C.INVITES, inviteId), {
     status: action === 'accept' ? 'accepted' : 'declined',
     respondedAt: now,
     updatedAt: now,
@@ -477,7 +477,7 @@ export async function respondToInvite(
     const role = invite.roleSnapshot?.roleType ?? 'member'
     const roomRole = role === 'cofounder' ? 'cofounder' : 'member'
 
-    batch.set(doc(db, C.ROOMS, roomId, C.MEMBERS, userId), {
+    batch.set(doc(requireFirestoreDb(), C.ROOMS, roomId, C.MEMBERS, userId), {
       userId,
       roomRole,
       status: 'active',
@@ -487,7 +487,7 @@ export async function respondToInvite(
       profileSnapshot: userSnapshot,
     })
 
-    batch.set(doc(db, 'users', userId, C.ROOM_MEMBERSHIPS, roomId), {
+    batch.set(doc(requireFirestoreDb(), 'users', userId, C.ROOM_MEMBERSHIPS, roomId), {
       roomId,
       title: invite.roomSnapshot?.title ?? '',
       ...(invite.roomSnapshot?.coverImageUrl ? { coverImageUrl: invite.roomSnapshot.coverImageUrl } : {}),
@@ -497,7 +497,7 @@ export async function respondToInvite(
       joinedAt: now,
     })
 
-    batch.update(doc(db, C.ROOMS, roomId), {
+    batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId), {
       memberCount: increment(1),
       updatedAt: now,
     })
@@ -508,7 +508,7 @@ export async function respondToInvite(
 
 // ── Revoke invite ─────────────────────────────────────────────────────────────
 export async function revokeInvite(roomId: string, inviteId: string): Promise<void> {
-  await updateDoc(doc(db, C.ROOMS, roomId, C.INVITES, inviteId), {
+  await updateDoc(doc(requireFirestoreDb(), C.ROOMS, roomId, C.INVITES, inviteId), {
     status: 'revoked',
     updatedAt: serverTimestamp(),
   })
@@ -519,7 +519,7 @@ export async function updateCollabRoom(
   roomId: string,
   updates: Partial<Pick<CollabRoom, 'title' | 'summary' | 'coverImageUrl' | 'tags' | 'isRecruiting' | 'startup' | 'visibility'>>,
 ): Promise<void> {
-  await updateDoc(doc(db, C.ROOMS, roomId), {
+  await updateDoc(doc(requireFirestoreDb(), C.ROOMS, roomId), {
     ...updates,
     updatedAt: serverTimestamp(),
     lastActivityAt: serverTimestamp(),
@@ -533,11 +533,11 @@ export async function createStartupSession(
   payload: CreateSessionPayload,
 ): Promise<{ sessionId: string; liveKitRoomName: string }> {
   const now = serverTimestamp()
-  const sessionRef = doc(collection(db, C.ROOMS, roomId, C.SESSIONS))
+  const sessionRef = doc(collection(requireFirestoreDb(), C.ROOMS, roomId, C.SESSIONS))
   const sessionId = sessionRef.id
   const liveKitRoomName = `startup_${roomId}_${sessionId}`.slice(0, 64)
 
-  const batch = writeBatch(db)
+  const batch = writeBatch(requireFirestoreDb())
   batch.set(sessionRef, {
     title:          payload.title,
     sessionType:    payload.sessionType,
@@ -550,7 +550,7 @@ export async function createStartupSession(
     createdAt:      now,
   })
 
-  batch.update(doc(db, C.ROOMS, roomId), {
+  batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId), {
     currentLiveSessionId: sessionId,
     lastActivityAt: now,
     updatedAt: now,
@@ -563,12 +563,12 @@ export async function createStartupSession(
 // ── End session ───────────────────────────────────────────────────────────────
 export async function endStartupSession(roomId: string, sessionId: string): Promise<void> {
   const now = serverTimestamp()
-  const batch = writeBatch(db)
-  batch.update(doc(db, C.ROOMS, roomId, C.SESSIONS, sessionId), {
+  const batch = writeBatch(requireFirestoreDb())
+  batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId, C.SESSIONS, sessionId), {
     status: 'ended',
     endedAt: now,
   })
-  batch.update(doc(db, C.ROOMS, roomId), {
+  batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId), {
     currentLiveSessionId: null,
     updatedAt: now,
   })
@@ -582,7 +582,7 @@ export async function createMilestone(
   data: Pick<Milestone, 'title' | 'description' | 'ownerIds' | 'dueAt'>,
 ): Promise<string> {
   const now = serverTimestamp()
-  const ref = await addDoc(collection(db, C.ROOMS, roomId, C.MILESTONES), {
+  const ref = await addDoc(collection(requireFirestoreDb(), C.ROOMS, roomId, C.MILESTONES), {
     ...data,
     status: 'todo' as MilestoneStatus,
     createdBy: creatorId,
@@ -597,7 +597,7 @@ export async function updateMilestoneStatus(
   milestoneId: string,
   status: MilestoneStatus,
 ): Promise<void> {
-  await updateDoc(doc(db, C.ROOMS, roomId, C.MILESTONES, milestoneId), {
+  await updateDoc(doc(requireFirestoreDb(), C.ROOMS, roomId, C.MILESTONES, milestoneId), {
     status,
     updatedAt: serverTimestamp(),
   })
@@ -609,7 +609,7 @@ export async function upsertStartupProfile(
   profile: Omit<SP, 'userId' | 'updatedAt'>,
 ): Promise<void> {
   await setDoc(
-    doc(db, C.STARTUP_PROFILES, userId),
+    doc(requireFirestoreDb(), C.STARTUP_PROFILES, userId),
     { ...profile, userId, updatedAt: serverTimestamp() },
     { merge: true },
   )
@@ -617,7 +617,7 @@ export async function upsertStartupProfile(
 
 // ── Delete room (soft delete) ─────────────────────────────────────────────────
 export async function softDeleteRoom(roomId: string): Promise<void> {
-  await updateDoc(doc(db, C.ROOMS, roomId), {
+  await updateDoc(doc(requireFirestoreDb(), C.ROOMS, roomId), {
     status: 'deleted',
     updatedAt: serverTimestamp(),
   })
@@ -631,16 +631,16 @@ export async function reviewJoinRequest(
   userId: string,
 ): Promise<void> {
   const now = serverTimestamp()
-  const batch = writeBatch(db)
+  const batch = writeBatch(requireFirestoreDb())
 
-  batch.update(doc(db, C.ROOMS, roomId, C.JOIN_REQUESTS, requestId), {
+  batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId, C.JOIN_REQUESTS, requestId), {
     status: action === 'accept' ? 'accepted' : 'declined',
     respondedAt: now,
     updatedAt: now,
   })
 
   if (action === 'accept') {
-    const memberRef = doc(db, C.ROOMS, roomId, C.MEMBERS, userId)
+    const memberRef = doc(requireFirestoreDb(), C.ROOMS, roomId, C.MEMBERS, userId)
     batch.set(memberRef, {
       userId,
       roomRole: 'member',
@@ -652,13 +652,13 @@ export async function reviewJoinRequest(
       inviteId: null,
       requestId,
     })
-    batch.update(doc(db, C.ROOMS, roomId), {
+    batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId), {
       memberCount: increment(1),
       pendingJoinRequestCount: increment(-1),
       updatedAt: now,
     })
   } else {
-    batch.update(doc(db, C.ROOMS, roomId), {
+    batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId), {
       pendingJoinRequestCount: increment(-1),
       updatedAt: now,
     })
@@ -676,7 +676,7 @@ export async function submitAccessRequest(
   reason: string,
 ): Promise<string> {
   const now = serverTimestamp()
-  const ref = await addDoc(collection(db, C.ROOMS, roomId, C.ACCESS_REQUESTS), {
+  const ref = await addDoc(collection(requireFirestoreDb(), C.ROOMS, roomId, C.ACCESS_REQUESTS), {
     userId,
     userName,
     userPhoto,
@@ -698,16 +698,16 @@ export async function reviewAccessRequest(
   reviewerId: string,
 ): Promise<void> {
   const now = serverTimestamp()
-  const batch = writeBatch(db)
+  const batch = writeBatch(requireFirestoreDb())
 
-  batch.update(doc(db, C.ROOMS, roomId, C.ACCESS_REQUESTS, requestId), {
+  batch.update(doc(requireFirestoreDb(), C.ROOMS, roomId, C.ACCESS_REQUESTS, requestId), {
     status: action === 'accept' ? 'accepted' : 'rejected',
     decidedAt: now,
     decidedBy: reviewerId,
   })
 
   if (action === 'accept') {
-    batch.set(doc(db, C.ROOMS, roomId, C.ACCESS, applicantId), {
+    batch.set(doc(requireFirestoreDb(), C.ROOMS, roomId, C.ACCESS, applicantId), {
       userId: applicantId,
       level: 'details',
       grantedAt: now,

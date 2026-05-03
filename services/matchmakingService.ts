@@ -11,7 +11,7 @@ import {
   where,
   increment,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { Match } from '@/lib/types'
 import { getTournamentById } from './tournamentService'
@@ -78,7 +78,7 @@ export async function generateNextRound(
   config: MatchmakingConfig = {}
 ): Promise<MatchmakingResult> {
   const matchesSnap = await getDocs(
-    query(collection(db, COLLECTIONS.MATCHES), where('tournamentId', '==', tournamentId))
+    query(collection(requireFirestoreDb(), COLLECTIONS.MATCHES), where('tournamentId', '==', tournamentId))
   )
 
   const existingMatches = matchesSnap.docs.map((d) => ({ ...d.data(), id: d.id } as Match))
@@ -108,7 +108,7 @@ export async function generateNextRound(
  */
 export async function getMatchmakingMetrics(tournamentId: string): Promise<MatchmakingMetrics> {
   const matchesSnap = await getDocs(
-    query(collection(db, COLLECTIONS.MATCHES), where('tournamentId', '==', tournamentId))
+    query(collection(requireFirestoreDb(), COLLECTIONS.MATCHES), where('tournamentId', '==', tournamentId))
   )
 
   const matches = matchesSnap.docs.map((d) => ({ ...d.data(), id: d.id } as Match))
@@ -143,7 +143,7 @@ export async function checkExistingMatch(
   player2Id: string
 ): Promise<Match | null> {
   const matchesSnap = await getDocs(
-    query(collection(db, COLLECTIONS.MATCHES), where('tournamentId', '==', tournamentId))
+    query(collection(requireFirestoreDb(), COLLECTIONS.MATCHES), where('tournamentId', '==', tournamentId))
   )
 
   for (const docSnap of matchesSnap.docs) {
@@ -221,7 +221,7 @@ async function generateMatchesForPlayers(
       completedAt: null,
     }
 
-    const ref = await addDoc(collection(db, COLLECTIONS.MATCHES), matchData)
+    const ref = await addDoc(collection(requireFirestoreDb(), COLLECTIONS.MATCHES), matchData)
     createdMatches.push({ ...matchData, id: ref.id })
   }
 
@@ -348,7 +348,7 @@ function optimizedXPPairing(
 
 async function getExistingPairKeys(tournamentId: string): Promise<Set<string>> {
   const matchesSnap = await getDocs(
-    query(collection(db, COLLECTIONS.MATCHES), where('tournamentId', '==', tournamentId))
+    query(collection(requireFirestoreDb(), COLLECTIONS.MATCHES), where('tournamentId', '==', tournamentId))
   )
 
   return new Set(
@@ -369,7 +369,7 @@ async function awardByeWin(tournamentId: string, playerId: string): Promise<void
 
   const now = new Date().toISOString()
   const tournament = await getTournamentById(tournamentId)
-  const playerRef = doc(db, COLLECTIONS.USERS, playerId)
+  const playerRef = doc(requireFirestoreDb(), COLLECTIONS.USERS, playerId)
 
   await updateDoc(playerRef, {
     xp: increment(XP_CONFIG.WIN),
@@ -393,7 +393,7 @@ async function awardByeWin(tournamentId: string, playerId: string): Promise<void
     completedAt: now,
   }
 
-  const ref = await addDoc(collection(db, COLLECTIONS.MATCHES), matchData)
+  const ref = await addDoc(collection(requireFirestoreDb(), COLLECTIONS.MATCHES), matchData)
 
   await addMatchHistoryEntry(playerId, {
     matchId: ref.id,

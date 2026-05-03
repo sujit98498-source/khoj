@@ -19,7 +19,7 @@
 
 import { useRef, useState, DragEvent, ChangeEvent } from 'react'
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'
-import { storage } from '@/lib/firebase/config'
+import { requireFirebaseStorage } from '@/lib/firebase/config'
 import clsx from 'clsx'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -95,7 +95,7 @@ export function AvatarUploader({
     // Build a safe storage path
     const safeName = file.name.replace(/[^a-z0-9._-]/gi, '_')
     const path = `profile-images/${userId}/${Date.now()}_${safeName}`
-    const fileRef = storageRef(storage, path)
+    const fileRef = storageRef(requireFirebaseStorage(), path)
 
     const uploadTask = uploadBytesResumable(fileRef, file, {
       contentType: file.type,
@@ -170,7 +170,7 @@ export function AvatarUploader({
     // This is best-effort; don't block the UI on it.
     if (currentUrl?.includes('firebasestorage')) {
       try {
-        const fileRef = storageRef(storage, currentUrl)
+        const fileRef = storageRef(requireFirebaseStorage(), currentUrl)
         await deleteObject(fileRef)
       } catch {
         // Silent — old image deletion is non-critical

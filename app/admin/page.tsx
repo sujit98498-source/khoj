@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { collection, getDocs } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { createTournament } from '@/services/tournamentService'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -84,11 +84,11 @@ export default function AdminPage() {
     const load = async () => {
       try {
         const [users, tournaments, announcements, results, reports] = await Promise.all([
-          getDocs(collection(db, COLLECTIONS.USERS)),
-          getDocs(collection(db, COLLECTIONS.TOURNAMENTS)),
-          getDocs(collection(db, COLLECTIONS.ANNOUNCEMENTS)),
-          getDocs(collection(db, COLLECTIONS.RESULTS)),
-          getDocs(collection(db, COLLECTIONS.COMMUNITY_REPORTS)),
+          getDocs(collection(requireFirestoreDb(), COLLECTIONS.USERS)),
+          getDocs(collection(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS)),
+          getDocs(collection(requireFirestoreDb(), COLLECTIONS.ANNOUNCEMENTS)),
+          getDocs(collection(requireFirestoreDb(), COLLECTIONS.RESULTS)),
+          getDocs(collection(requireFirestoreDb(), COLLECTIONS.COMMUNITY_REPORTS)),
         ])
 
         setStats({

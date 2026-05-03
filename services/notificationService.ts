@@ -13,7 +13,7 @@ import {
   limit,
   writeBatch,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { Notification } from '@/lib/types'
 
@@ -54,7 +54,7 @@ export function resolveNotificationUrl(
 export async function createNotification(
   data: CreateNotificationInput
 ): Promise<void> {
-  await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
+  await addDoc(collection(requireFirestoreDb(), COLLECTIONS.NOTIFICATIONS), {
     ...data,
     // Ensure actionUrl is always stored so click handlers can use it
     actionUrl: data.actionUrl ?? resolveNotificationUrl(data.type, undefined, data.metadata),
@@ -68,7 +68,7 @@ export async function createNotification(
  */
 export async function getUserNotifications(userId: string): Promise<Notification[]> {
   const q = query(
-    collection(db, COLLECTIONS.NOTIFICATIONS),
+    collection(requireFirestoreDb(), COLLECTIONS.NOTIFICATIONS),
     where('userId', '==', userId),
     orderBy('createdAt', 'desc'),
     limit(20)
@@ -81,7 +81,7 @@ export async function getUserNotifications(userId: string): Promise<Notification
  * Mark a single notification as read
  */
 export async function markNotificationRead(notificationId: string): Promise<void> {
-  const ref = doc(db, COLLECTIONS.NOTIFICATIONS, notificationId)
+  const ref = doc(requireFirestoreDb(), COLLECTIONS.NOTIFICATIONS, notificationId)
   await updateDoc(ref, { read: true })
 }
 
@@ -90,12 +90,12 @@ export async function markNotificationRead(notificationId: string): Promise<void
  */
 export async function markAllNotificationsRead(userId: string): Promise<void> {
   const q = query(
-    collection(db, COLLECTIONS.NOTIFICATIONS),
+    collection(requireFirestoreDb(), COLLECTIONS.NOTIFICATIONS),
     where('userId', '==', userId),
     where('read', '==', false)
   )
   const snap = await getDocs(q)
-  const batch = writeBatch(db)
+  const batch = writeBatch(requireFirestoreDb())
   snap.docs.forEach((d) => batch.update(d.ref, { read: true }))
   await batch.commit()
 }
@@ -106,12 +106,12 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
  */
 export async function clearAllNotifications(userId: string): Promise<void> {
   const q = query(
-    collection(db, COLLECTIONS.NOTIFICATIONS),
+    collection(requireFirestoreDb(), COLLECTIONS.NOTIFICATIONS),
     where('userId', '==', userId)
   )
   const snap = await getDocs(q)
   if (snap.empty) return
-  const batch = writeBatch(db)
+  const batch = writeBatch(requireFirestoreDb())
   snap.docs.forEach((d) => batch.update(d.ref, { cleared: true, read: true }))
   await batch.commit()
 }

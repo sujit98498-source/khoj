@@ -17,7 +17,7 @@ import {
   where,
   addDoc,
 } from 'firebase/firestore'
-import { auth, db } from '@/lib/firebase/config'
+import { auth, requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { Tournament, TournamentPlacement, TournamentResults, XP_CONFIG } from '@/lib/types'
 import { recalculateRanks } from '@/services/userService'
@@ -178,7 +178,7 @@ function getPlacementLabel(placement: TournamentPlacement): string {
  */
 export async function getAllTournaments(): Promise<Tournament[]> {
   const q = query(
-    collection(db, COLLECTIONS.TOURNAMENTS),
+    collection(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS),
     orderBy('startDate', 'desc')
   )
   const snap = await getDocs(q)
@@ -189,7 +189,7 @@ export async function getAllTournaments(): Promise<Tournament[]> {
  * Fetch a single tournament by id
  */
 export async function getTournamentById(id: string): Promise<Tournament | null> {
-  const ref = doc(db, COLLECTIONS.TOURNAMENTS, id)
+  const ref = doc(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS, id)
   const snap = await getDoc(ref)
   if (!snap.exists()) return null
   return normalizeTournament(snap.data() as TournamentRecord, snap.id)
@@ -200,7 +200,7 @@ export async function getTournamentById(id: string): Promise<Tournament | null> 
  */
 export async function getUserTournaments(userId: string): Promise<Tournament[]> {
   const q = query(
-    collection(db, COLLECTIONS.TOURNAMENTS),
+    collection(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS),
     where('participants', 'array-contains', userId)
   )
   const snap = await getDocs(q)
@@ -211,7 +211,7 @@ export async function getUserTournaments(userId: string): Promise<Tournament[]> 
  * Create a new tournament
  */
 export async function createTournament(input: CreateTournamentInput): Promise<string> {
-  const ref = await addDoc(collection(db, COLLECTIONS.TOURNAMENTS), {
+  const ref = await addDoc(collection(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS), {
     ...input,
     entryFee: input.entryFee ?? 0,
     prizeMoney: input.prizeMoney ?? 0,
@@ -229,14 +229,14 @@ export async function updateTournament(
   id: string,
   input: UpdateTournamentInput
 ): Promise<void> {
-  await updateDoc(doc(db, COLLECTIONS.TOURNAMENTS, id), { ...input })
+  await updateDoc(doc(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS, id), { ...input })
 }
 
 /**
  * Delete a tournament
  */
 export async function deleteTournament(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLLECTIONS.TOURNAMENTS, id))
+  await deleteDoc(doc(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS, id))
 }
 
 /**
@@ -246,7 +246,7 @@ export async function updateTournamentStatus(
   id: string,
   status: Tournament['status']
 ): Promise<void> {
-  const ref = doc(db, COLLECTIONS.TOURNAMENTS, id)
+  const ref = doc(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS, id)
   await updateDoc(ref, { status })
 }
 
@@ -254,13 +254,13 @@ async function publishTournamentResultClient(
   tournamentId: string,
   results: TournamentResults
 ): Promise<void> {
-  const tournamentRef = doc(db, COLLECTIONS.TOURNAMENTS, tournamentId)
-  const resultRef = doc(collection(db, COLLECTIONS.RESULTS))
+  const tournamentRef = doc(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS, tournamentId)
+  const resultRef = doc(collection(requireFirestoreDb(), COLLECTIONS.RESULTS))
   let publishedTournament: Tournament | null = null
   let publishedResults = EMPTY_RESULTS
   let xpAwards: Record<string, number> = {}
 
-  await runTransaction(db, async (transaction) => {
+  await runTransaction(requireFirestoreDb(), async (transaction) => {
     const tournamentSnap = await transaction.get(tournamentRef)
 
     if (!tournamentSnap.exists()) {
@@ -287,7 +287,7 @@ async function publishTournamentResultClient(
     })
 
     tournament.participants.forEach((participantId) => {
-      const participantRef = doc(db, COLLECTIONS.USERS, participantId)
+      const participantRef = doc(requireFirestoreDb(), COLLECTIONS.USERS, participantId)
       const participantUpdates: Record<string, unknown> = {
         xp: increment(computedXpAwards[participantId] ?? XP_CONFIG.TOURNAMENT_PARTICIPATION),
         matchesPlayed: increment(1),
@@ -308,7 +308,7 @@ async function publishTournamentResultClient(
       xpAwards: computedXpAwards,
       prizeMoney: tournament.prizeMoney ?? 0,
       createdAt: now,
-      publishedBy: auth.currentUser?.uid ?? 'admin',
+      publishedBy: auth?.currentUser?.uid ?? 'admin',
     })
   })
 
@@ -364,7 +364,7 @@ export async function publishTournamentResult(
       body: JSON.stringify({
         tournamentId,
         results: normalizedResults,
-        submittedBy: auth.currentUser?.uid ?? null,
+        submittedBy: auth?.currentUser?.uid ?? null,
       }),
     })
 
@@ -404,7 +404,7 @@ export async function joinTournament(
   tournamentId: string,
   userId: string
 ): Promise<{ success: boolean; message: string }> {
-  const ref = doc(db, COLLECTIONS.TOURNAMENTS, tournamentId)
+  const ref = doc(requireFirestoreDb(), COLLECTIONS.TOURNAMENTS, tournamentId)
   const snap = await getDoc(ref)
 
   if (!snap.exists()) return { success: false, message: 'Tournament not found' }

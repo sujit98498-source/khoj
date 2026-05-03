@@ -15,7 +15,7 @@ import {
   where,
   type Unsubscribe,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import type { Friendship, KhojUser, PortfolioUser } from '@/lib/types'
 import { getFullPortfolioData } from '@/services/portfolioService'
@@ -161,7 +161,7 @@ export async function getNetworkUserSnapshot(userId: string): Promise<NetworkUse
   const portfolio = await getFullPortfolioData(userId).catch(() => null)
   if (portfolio?.user) return actorFromPortfolioUser(portfolio.user)
 
-  const snap = await getDoc(doc(db, COLLECTIONS.USERS, userId)).catch(() => null)
+  const snap = await getDoc(doc(requireFirestoreDb(), COLLECTIONS.USERS, userId)).catch(() => null)
   if (!snap?.exists()) return null
   const data = snap.data() as KhojUser
   return actorFromKhojUser({ ...data, uid: data.uid ?? snap.id })
@@ -178,22 +178,22 @@ export function subscribeNetworkCounts(userId: string, onUpdate: (counts: Networ
   }
 
   const unsubs = [
-    onSnapshot(collection(db, 'users', userId, 'connections'), (snap) => {
+    onSnapshot(collection(requireFirestoreDb(), 'users', userId, 'connections'), (snap) => {
       mirroredConnectionIds = new Set(snap.docs.map((item) => item.id))
       updateConnectionCount()
     }),
-    onSnapshot(query(collection(db, COLLECTIONS.FRIENDS), where('userIds', 'array-contains', userId)), (snap) => {
+    onSnapshot(query(collection(requireFirestoreDb(), COLLECTIONS.FRIENDS), where('userIds', 'array-contains', userId)), (snap) => {
       legacyConnectionIds = new Set(snap.docs.map((friendshipDoc) => {
         const friendship = docToLegacyFriendship(friendshipDoc.id, friendshipDoc.data() as Record<string, unknown>)
         return friendship.userIds.find((id) => id !== userId) ?? ''
       }).filter(Boolean))
       updateConnectionCount()
     }),
-    onSnapshot(collection(db, 'users', userId, 'followers'), (snap) => {
+    onSnapshot(collection(requireFirestoreDb(), 'users', userId, 'followers'), (snap) => {
       counts.followers = snap.size
       emit()
     }),
-    onSnapshot(collection(db, 'users', userId, 'following'), (snap) => {
+    onSnapshot(collection(requireFirestoreDb(), 'users', userId, 'following'), (snap) => {
       counts.following = snap.size
       emit()
     }),
@@ -208,7 +208,7 @@ export function subscribeNetworkList(
   onUpdate: (users: NetworkUserSnapshot[]) => void
 ): Unsubscribe {
   if (tab !== 'connections') {
-    return onSnapshot(collection(db, 'users', userId, tab), (snap) => {
+    return onSnapshot(collection(requireFirestoreDb(), 'users', userId, tab), (snap) => {
       onUpdate(snap.docs.map((item) => toNetworkUser(item.id, item.data() as Record<string, unknown>)))
     })
   }
@@ -219,12 +219,12 @@ export function subscribeNetworkList(
     onUpdate(mergeNetworkUsers(legacyUsers, mirroredUsers))
   }
 
-  const unsubMirrored = onSnapshot(collection(db, 'users', userId, 'connections'), (snap) => {
+  const unsubMirrored = onSnapshot(collection(requireFirestoreDb(), 'users', userId, 'connections'), (snap) => {
     mirroredUsers = snap.docs.map((item) => toNetworkUser(item.id, item.data() as Record<string, unknown>))
     emit()
   })
 
-  const unsubLegacy = onSnapshot(query(collection(db, COLLECTIONS.FRIENDS), where('userIds', 'array-contains', userId)), (snap) => {
+  const unsubLegacy = onSnapshot(query(collection(requireFirestoreDb(), COLLECTIONS.FRIENDS), where('userIds', 'array-contains', userId)), (snap) => {
     legacyUsers = snap.docs.map((friendshipDoc) => {
       const friendship = docToLegacyFriendship(friendshipDoc.id, friendshipDoc.data() as Record<string, unknown>)
       return legacyFriendshipToNetworkUser(friendship, userId)
@@ -239,7 +239,7 @@ export function subscribeNetworkList(
 }
 
 export async function getNetworkList(userId: string, tab: NetworkTab): Promise<NetworkUserSnapshot[]> {
-  const snap = await getDocs(collection(db, 'users', userId, tab))
+  const snap = await getDocs(collection(requireFirestoreDb(), 'users', userId, tab))
   const users = snap.docs.map((item) => toNetworkUser(item.id, item.data() as Record<string, unknown>))
 
   if (tab !== 'connections') return users
@@ -257,11 +257,11 @@ export async function mirrorConnection(
 ): Promise<void> {
   const now = serverTimestamp()
   await Promise.all([
-    setDoc(doc(db, 'users', userA.uid, 'connections', userB.uid), {
+    setDoc(doc(requireFirestoreDb(), 'users', userA.uid, 'connections', userB.uid), {
       ...fromActor(userB),
       connectedAt: now,
     }),
-    setDoc(doc(db, 'users', userB.uid, 'connections', userA.uid), {
+    setDoc(doc(requireFirestoreDb(), 'users', userB.uid, 'connections', userA.uid), {
       ...fromActor(userA),
       connectedAt: now,
     }),
@@ -270,8 +270,8 @@ export async function mirrorConnection(
 
 export async function removeConnectionMirror(uid1: string, uid2: string): Promise<void> {
   await Promise.all([
-    deleteDoc(doc(db, 'users', uid1, 'connections', uid2)),
-    deleteDoc(doc(db, 'users', uid2, 'connections', uid1)),
+    deleteDoc(doc(requireFirestoreDb(), 'users', uid1, 'connections', uid2)),
+    deleteDoc(doc(requireFirestoreDb(), 'users', uid2, 'connections', uid1)),
   ])
 }
 
@@ -280,11 +280,11 @@ export async function followUser(currentUser: NetworkActor, targetUser: NetworkA
 
   const now = serverTimestamp()
   await Promise.all([
-    setDoc(doc(db, 'users', currentUser.uid, 'following', targetUser.uid), {
+    setDoc(doc(requireFirestoreDb(), 'users', currentUser.uid, 'following', targetUser.uid), {
       ...fromActor(targetUser),
       followedAt: now,
     }),
-    setDoc(doc(db, 'users', targetUser.uid, 'followers', currentUser.uid), {
+    setDoc(doc(requireFirestoreDb(), 'users', targetUser.uid, 'followers', currentUser.uid), {
       ...fromActor(currentUser),
       followedAt: now,
     }),
@@ -302,13 +302,13 @@ export async function followUser(currentUser: NetworkActor, targetUser: NetworkA
 
 export async function unfollowUser(currentUserId: string, targetUserId: string): Promise<void> {
   await Promise.all([
-    deleteDoc(doc(db, 'users', currentUserId, 'following', targetUserId)),
-    deleteDoc(doc(db, 'users', targetUserId, 'followers', currentUserId)),
+    deleteDoc(doc(requireFirestoreDb(), 'users', currentUserId, 'following', targetUserId)),
+    deleteDoc(doc(requireFirestoreDb(), 'users', targetUserId, 'followers', currentUserId)),
   ])
 }
 
 export async function isFollowing(currentUserId: string, targetUserId: string): Promise<boolean> {
-  const snap = await getDoc(doc(db, 'users', currentUserId, 'following', targetUserId))
+  const snap = await getDoc(doc(requireFirestoreDb(), 'users', currentUserId, 'following', targetUserId))
   return snap.exists()
 }
 
@@ -317,7 +317,7 @@ export function subscribeFollowStatus(
   targetUserId: string,
   onUpdate: (following: boolean) => void
 ): Unsubscribe {
-  return onSnapshot(doc(db, 'users', currentUserId, 'following', targetUserId), (snap) => {
+  return onSnapshot(doc(requireFirestoreDb(), 'users', currentUserId, 'following', targetUserId), (snap) => {
     onUpdate(snap.exists())
   })
 }
@@ -329,7 +329,7 @@ export async function getConnectionStatus(
   if (await areFriends(currentUserId, targetUserId)) return 'connected'
 
   const sent = await getDocs(query(
-    collection(db, COLLECTIONS.FRIEND_REQUESTS),
+    collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
     where('fromUserId', '==', currentUserId),
     where('toUserId', '==', targetUserId),
     where('status', '==', 'pending'),
@@ -338,7 +338,7 @@ export async function getConnectionStatus(
   if (!sent.empty) return 'pending_sent'
 
   const received = await getDocs(query(
-    collection(db, COLLECTIONS.FRIEND_REQUESTS),
+    collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
     where('fromUserId', '==', targetUserId),
     where('toUserId', '==', currentUserId),
     where('status', '==', 'pending'),

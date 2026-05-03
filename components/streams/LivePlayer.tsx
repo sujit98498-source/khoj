@@ -204,8 +204,8 @@ function HostLayout({
         )
         if (!blob || cancelled) return
         const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage')
-        const { storage } = await import('@/lib/firebase/config')
-        const storageRef = ref(storage, `stream-thumbnails/${streamId}.jpg`)
+        const { requireFirebaseStorage } = await import('@/lib/firebase/config')
+        const storageRef = ref(requireFirebaseStorage(), `stream-thumbnails/${streamId}.jpg`)
         await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' })
         const url = await getDownloadURL(storageRef)
         if (!cancelled) await updateStreamThumbnail(streamId, url)

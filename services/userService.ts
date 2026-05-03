@@ -16,7 +16,7 @@ import {
   increment,
   arrayUnion,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
+import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { KhojUser, MatchHistoryEntry } from '@/lib/types'
 
@@ -28,7 +28,7 @@ export async function createUserDocument(
   name: string,
   email: string
 ): Promise<void> {
-  const userRef = doc(db, COLLECTIONS.USERS, uid)
+  const userRef = doc(requireFirestoreDb(), COLLECTIONS.USERS, uid)
   const now = new Date().toISOString()
 
   await setDoc(userRef, {
@@ -50,7 +50,7 @@ export async function createUserDocument(
  * Fetch a single user by uid
  */
 export async function getUserById(uid: string): Promise<KhojUser | null> {
-  const userRef = doc(db, COLLECTIONS.USERS, uid)
+  const userRef = doc(requireFirestoreDb(), COLLECTIONS.USERS, uid)
   const snap = await getDoc(userRef)
   if (!snap.exists()) return null
 
@@ -64,7 +64,7 @@ export async function getUserById(uid: string): Promise<KhojUser | null> {
  * Update a user's skills array
  */
 export async function updateUserSkills(uid: string, skills: string[]): Promise<void> {
-  const userRef = doc(db, COLLECTIONS.USERS, uid)
+  const userRef = doc(requireFirestoreDb(), COLLECTIONS.USERS, uid)
   await updateDoc(userRef, { skills, lastActive: new Date().toISOString() })
 }
 
@@ -73,7 +73,7 @@ export async function updateUserSkills(uid: string, skills: string[]): Promise<v
  */
 export async function getLeaderboard(topN: number = 50): Promise<KhojUser[]> {
   const q = query(
-    collection(db, COLLECTIONS.USERS),
+    collection(requireFirestoreDb(), COLLECTIONS.USERS),
     orderBy('xp', 'desc'),
     limit(topN)
   )
@@ -88,7 +88,7 @@ export async function getLeaderboard(topN: number = 50): Promise<KhojUser[]> {
  * Get a user's match history subcollection
  */
 export async function getMatchHistory(uid: string): Promise<MatchHistoryEntry[]> {
-  const historyRef = collection(db, COLLECTIONS.USERS, uid, 'matchHistory')
+  const historyRef = collection(requireFirestoreDb(), COLLECTIONS.USERS, uid, 'matchHistory')
   const q = query(historyRef, orderBy('date', 'desc'), limit(20))
   const snap = await getDocs(q)
   return snap.docs.map((d) => d.data() as MatchHistoryEntry)
@@ -102,7 +102,7 @@ export async function addMatchHistoryEntry(
   entry: MatchHistoryEntry
 ): Promise<void> {
   const historyRef = doc(
-    collection(db, COLLECTIONS.USERS, uid, 'matchHistory'),
+    collection(requireFirestoreDb(), COLLECTIONS.USERS, uid, 'matchHistory'),
     entry.matchId
   )
   await setDoc(historyRef, entry)
@@ -114,11 +114,11 @@ export async function addMatchHistoryEntry(
  */
 export async function recalculateRanks(): Promise<void> {
   const allUsersSnap = await getDocs(
-    query(collection(db, COLLECTIONS.USERS), orderBy('xp', 'desc'))
+    query(collection(requireFirestoreDb(), COLLECTIONS.USERS), orderBy('xp', 'desc'))
   )
   const batch: Promise<void>[] = []
   allUsersSnap.docs.forEach((snap, index) => {
-    const userRef = doc(db, COLLECTIONS.USERS, snap.id)
+    const userRef = doc(requireFirestoreDb(), COLLECTIONS.USERS, snap.id)
     batch.push(updateDoc(userRef, { rank: index + 1 }))
   })
   await Promise.all(batch)

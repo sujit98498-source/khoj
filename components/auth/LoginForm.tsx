@@ -9,7 +9,7 @@ import {
   GoogleAuthProvider,
   sendPasswordResetEmail,
 } from 'firebase/auth'
-import { auth } from '@/lib/firebase/config'
+import { requireFirebaseAuth } from '@/lib/firebase/config'
 import { createUserDocument, getUserById } from '@/services/userService'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -40,6 +40,7 @@ export function LoginForm() {
     if (!validate()) return
     setLoading(true)
     try {
+      const auth = requireFirebaseAuth()
       await signInWithEmailAndPassword(auth, email, password)
       document.cookie = 'khoj-auth=1; path=/; max-age=2592000; SameSite=Lax'
       toast.success('Welcome back!')
@@ -72,6 +73,7 @@ export function LoginForm() {
     setResetMessage(null)
 
     try {
+      const auth = requireFirebaseAuth()
       await sendPasswordResetEmail(auth, trimmedEmail)
       console.log('Password reset email sent successfully for:', trimmedEmail)
       setResetMessage({ type: 'success', text: 'Reset email sent. Check your inbox.' })
@@ -98,6 +100,7 @@ export function LoginForm() {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     try {
+      const auth = requireFirebaseAuth()
       const provider = new GoogleAuthProvider()
       provider.setCustomParameters({ prompt: 'select_account' })
 
