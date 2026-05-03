@@ -3,6 +3,9 @@
 
 'use client'
 
+// Prevent build-time prerendering so Firebase is only initialized in the browser.
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'

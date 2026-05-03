@@ -1,5 +1,9 @@
 'use client'
 
+// Force all admin routes to be rendered dynamically (not statically prerendered at build time).
+// This prevents Firebase initialization errors when env vars are not available during Vercel build.
+export const dynamic = 'force-dynamic'
+
 import { useEffect, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAdminGuard } from '@/hooks/useAdminGuard'
