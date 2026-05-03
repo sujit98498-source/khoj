@@ -10,6 +10,12 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth'
 import { requireFirebaseAuth } from '@/lib/firebase/config'
+import {
+  getGoogleSignInErrorMessage,
+  getLoginErrorMessage,
+  getPasswordResetErrorMessage,
+  logFirebaseAuthError,
+} from '@/lib/firebase/authErrors'
 import { createUserDocument, getUserById } from '@/services/userService'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -45,12 +51,9 @@ export function LoginForm() {
       document.cookie = 'khoj-auth=1; path=/; max-age=2592000; SameSite=Lax'
       toast.success('Welcome back!')
       router.push('/dashboard')
-    } catch (err: any) {
-      const msg =
-        err.code === 'auth/invalid-credential'
-          ? 'Invalid email or password'
-          : 'Login failed. Try again.'
-      toast.error(msg)
+    } catch (error) {
+      const details = logFirebaseAuthError('Email login', error)
+      toast.error(getLoginErrorMessage(details.code))
     } finally {
       setLoading(false)
     }
@@ -78,18 +81,9 @@ export function LoginForm() {
       console.log('Password reset email sent successfully for:', trimmedEmail)
       setResetMessage({ type: 'success', text: 'Reset email sent. Check your inbox.' })
       toast.success('Reset email sent. Check your inbox.')
-    } catch (err: any) {
-      console.error('Reset password Firebase error:', err)
-
-      const msg =
-        err.code === 'auth/user-not-found'
-          ? 'No account was found for that email.'
-          : err.code === 'auth/invalid-email'
-            ? 'Please enter a valid email address.'
-            : err.code === 'auth/network-request-failed'
-              ? 'Network error. Please check your internet connection and try again.'
-              : 'Failed to send reset email. Try again.'
-
+    } catch (error) {
+      const details = logFirebaseAuthError('Password reset', error)
+      const msg = getPasswordResetErrorMessage(details.code)
       setResetMessage({ type: 'error', text: msg })
       toast.error(msg)
     } finally {
@@ -119,12 +113,9 @@ export function LoginForm() {
       document.cookie = 'khoj-auth=1; path=/; max-age=2592000; SameSite=Lax'
       toast.success('Signed in with Google!')
       router.push('/dashboard')
-    } catch (err: any) {
-      const msg =
-        err.code === 'auth/popup-closed-by-user'
-          ? 'Google sign-in was cancelled'
-          : 'Google sign-in failed. Try again.'
-      toast.error(msg)
+    } catch (error) {
+      const details = logFirebaseAuthError('Google sign-in', error)
+      toast.error(getGoogleSignInErrorMessage(details.code))
     } finally {
       setLoading(false)
     }

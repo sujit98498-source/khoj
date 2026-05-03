@@ -10,6 +10,11 @@ import {
   GoogleAuthProvider,
 } from 'firebase/auth'
 import { requireFirebaseAuth } from '@/lib/firebase/config'
+import {
+  getGoogleSignInErrorMessage,
+  getSignupErrorMessage,
+  logFirebaseAuthError,
+} from '@/lib/firebase/authErrors'
 import { createUserDocument, getUserById } from '@/services/userService'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -46,12 +51,9 @@ export function SignupForm() {
       document.cookie = 'khoj-auth=1; path=/; max-age=2592000; SameSite=Lax'
       toast.success('Account created! Welcome to KHOJ.')
       router.push('/dashboard')
-    } catch (err: any) {
-      const msg =
-        err.code === 'auth/email-already-in-use'
-          ? 'This email is already registered'
-          : 'Signup failed. Try again.'
-      toast.error(msg)
+    } catch (error) {
+      const details = logFirebaseAuthError('Email signup', error)
+      toast.error(getSignupErrorMessage(details.code))
     } finally {
       setLoading(false)
     }
@@ -79,12 +81,9 @@ export function SignupForm() {
       document.cookie = 'khoj-auth=1; path=/; max-age=2592000; SameSite=Lax'
       toast.success('Signed in with Google!')
       router.push('/dashboard')
-    } catch (err: any) {
-      const msg =
-        err.code === 'auth/popup-closed-by-user'
-          ? 'Google sign-in was cancelled'
-          : 'Google sign-in failed. Try again.'
-      toast.error(msg)
+    } catch (error) {
+      const details = logFirebaseAuthError('Google signup', error)
+      toast.error(getGoogleSignInErrorMessage(details.code))
     } finally {
       setLoading(false)
     }

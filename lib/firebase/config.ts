@@ -43,6 +43,7 @@ const firebaseEnv = Object.fromEntries(
 const missingFirebaseEnv = REQUIRED_FIREBASE_ENV.filter((name) => !firebaseEnv[name])
 
 export const firebaseConfigReady = missingFirebaseEnv.length === 0
+export const firebaseAuthDomainReady = Boolean(firebaseEnv.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN)
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: firebaseEnv.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -56,6 +57,12 @@ const firebaseConfig: FirebaseOptions = {
 function warnFirebaseConfigMissing(detail?: string) {
   const suffix = detail ? ` ${detail}` : ''
   console.warn(`Firebase config missing. Check Vercel environment variables.${suffix}`)
+}
+
+function createFirebaseConfigError(): Error & { code: string } {
+  const error = new Error('Firebase is not configured.') as Error & { code: string }
+  error.code = 'firebase/not-configured'
+  return error
 }
 
 let app: FirebaseApp | null = null
@@ -82,13 +89,18 @@ if (!firebaseConfigReady) {
   }
 }
 
+if (process.env.NODE_ENV === 'development') {
+  console.info('Firebase config ready:', firebaseConfigReady)
+  console.info('Firebase auth domain exists:', firebaseAuthDomainReady)
+}
+
 export const auth = authInstance
 export const db = dbInstance
 export const storage = storageInstance
 
 export function requireFirebaseAuth(): Auth {
   if (!authInstance) {
-    throw new Error('Firebase is not configured.')
+    throw createFirebaseConfigError()
   }
 
   return authInstance
@@ -96,7 +108,7 @@ export function requireFirebaseAuth(): Auth {
 
 export function requireFirestoreDb(): Firestore {
   if (!dbInstance) {
-    throw new Error('Firebase is not configured.')
+    throw createFirebaseConfigError()
   }
 
   return dbInstance
@@ -104,7 +116,7 @@ export function requireFirestoreDb(): Firestore {
 
 export function requireFirebaseStorage(): FirebaseStorage {
   if (!storageInstance) {
-    throw new Error('Firebase is not configured.')
+    throw createFirebaseConfigError()
   }
 
   return storageInstance
