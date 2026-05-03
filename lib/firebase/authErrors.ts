@@ -56,6 +56,8 @@ export function getGoogleSignInErrorMessage(code: string): string {
     case 'auth/popup-closed-by-user':
     case 'auth/cancelled-popup-request':
       return 'Google sign-in was cancelled.'
+    case 'auth/popup-blocked':
+      return 'Google sign-in popup was blocked. Allow popups and try again.'
     case 'auth/unauthorized-domain':
       return 'This domain is not authorized in Firebase.'
     case 'auth/invalid-api-key':
