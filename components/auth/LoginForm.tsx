@@ -60,14 +60,10 @@ export function LoginForm() {
   }
 
   const handleResetPassword = async (targetEmail: string) => {
-    console.log('Forgot password clicked')
-
     const trimmedEmail = (targetEmail || email).trim()
-    console.log('Reset email value:', trimmedEmail)
 
     if (!trimmedEmail) {
       const message = 'Please enter your email address.'
-      console.error('Reset password error:', message)
       setResetMessage({ type: 'error', text: message })
       return
     }
@@ -78,7 +74,6 @@ export function LoginForm() {
     try {
       const auth = requireFirebaseAuth()
       await sendPasswordResetEmail(auth, trimmedEmail)
-      console.log('Password reset email sent successfully for:', trimmedEmail)
       setResetMessage({ type: 'success', text: 'Reset email sent. Check your inbox.' })
       toast.success('Reset email sent. Check your inbox.')
     } catch (error) {

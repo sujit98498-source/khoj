@@ -39,13 +39,15 @@ export function getLoginErrorMessage(code: string): string {
     case 'auth/wrong-password':
       return 'Wrong password.'
     case 'auth/invalid-api-key':
-      return 'Firebase API key is invalid. Check Vercel env variables.'
+      return 'Firebase API key is invalid. Check Vercel environment variables.'
     case 'auth/unauthorized-domain':
-      return 'This domain is not authorized in Firebase.'
+      return 'This domain is not authorized in Firebase. Add the Vercel domain in Firebase Authorized Domains.'
+    case 'auth/operation-not-allowed':
+      return 'This sign-in method is not enabled in Firebase Authentication.'
     case 'auth/network-request-failed':
       return 'Network error. Try again.'
     case 'firebase/not-configured':
-      return 'Firebase is not configured. Check Vercel env variables.'
+      return 'Firebase is not configured. Check Vercel environment variables.'
     default:
       return 'Login failed. Please try again.'
   }
@@ -55,17 +57,19 @@ export function getGoogleSignInErrorMessage(code: string): string {
   switch (code) {
     case 'auth/popup-closed-by-user':
     case 'auth/cancelled-popup-request':
-      return 'Google sign-in was cancelled.'
+      return 'Google sign-in popup was closed.'
     case 'auth/popup-blocked':
-      return 'Google sign-in popup was blocked. Allow popups and try again.'
+      return 'Popup was blocked by browser.'
     case 'auth/unauthorized-domain':
-      return 'This domain is not authorized in Firebase.'
+      return 'This domain is not authorized in Firebase. Add the Vercel domain in Firebase Authorized Domains.'
     case 'auth/invalid-api-key':
-      return 'Firebase API key is invalid. Check Vercel env variables.'
+      return 'Firebase API key is invalid. Check Vercel environment variables.'
+    case 'auth/operation-not-allowed':
+      return 'This sign-in method is not enabled in Firebase Authentication.'
     case 'auth/network-request-failed':
       return 'Network error. Try again.'
     case 'firebase/not-configured':
-      return 'Firebase is not configured. Check Vercel env variables.'
+      return 'Firebase is not configured. Check Vercel environment variables.'
     default:
       return 'Google sign-in failed. Please try again.'
   }
@@ -80,15 +84,15 @@ export function getSignupErrorMessage(code: string): string {
     case 'auth/weak-password':
       return 'Password must be at least 6 characters.'
     case 'auth/operation-not-allowed':
-      return 'This sign-up method is not enabled in Firebase.'
+      return 'This sign-in method is not enabled in Firebase Authentication.'
     case 'auth/unauthorized-domain':
-      return 'This domain is not authorized in Firebase.'
+      return 'This domain is not authorized in Firebase. Add the Vercel domain in Firebase Authorized Domains.'
     case 'auth/invalid-api-key':
-      return 'Firebase API key is invalid. Check Vercel env variables.'
+      return 'Firebase API key is invalid. Check Vercel environment variables.'
     case 'auth/network-request-failed':
       return 'Network error. Try again.'
     case 'firebase/not-configured':
-      return 'Firebase is not configured. Check Vercel env variables.'
+      return 'Firebase is not configured. Check Vercel environment variables.'
     default:
       return 'Signup failed. Please try again.'
   }
@@ -101,13 +105,15 @@ export function getPasswordResetErrorMessage(code: string): string {
     case 'auth/invalid-email':
       return 'Please enter a valid email address.'
     case 'auth/unauthorized-domain':
-      return 'This domain is not authorized in Firebase.'
+      return 'This domain is not authorized in Firebase. Add the Vercel domain in Firebase Authorized Domains.'
     case 'auth/invalid-api-key':
-      return 'Firebase API key is invalid. Check Vercel env variables.'
+      return 'Firebase API key is invalid. Check Vercel environment variables.'
+    case 'auth/operation-not-allowed':
+      return 'This sign-in method is not enabled in Firebase Authentication.'
     case 'auth/network-request-failed':
       return 'Network error. Try again.'
     case 'firebase/not-configured':
-      return 'Firebase is not configured. Check Vercel env variables.'
+      return 'Firebase is not configured. Check Vercel environment variables.'
     default:
       return 'Failed to send reset email. Please try again.'
   }
