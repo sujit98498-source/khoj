@@ -4,9 +4,10 @@ import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useNotifications } from '@/hooks/useNotifications'
 import { useState } from 'react'
+import { TopNav } from './TopNav'
 
 export function Navbar() {
-  const { khojUser, isAuthenticated, firebaseUser } = useAuth()
+  const { khojUser, isAuthenticated } = useAuth()
   const { unreadCount } = useNotifications(khojUser?.uid || null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -22,24 +23,7 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           {isAuthenticated ? (
             <>
-              <Link href="/dashboard" className="hover:text-khoj-accent transition-colors">
-                Dashboard
-              </Link>
-              <Link href="/community" className="hover:text-khoj-accent transition-colors">
-                Community
-              </Link>
-              <Link href="/tournaments" className="hover:text-khoj-accent transition-colors">
-                Tournaments
-              </Link>
-              <Link href="/leaderboard" className="hover:text-khoj-accent transition-colors">
-                Leaderboard
-              </Link>
-              <Link href="/jobs" className="hover:text-khoj-accent transition-colors">
-                Jobs
-              </Link>
-              <Link href="/rooms" className="hover:text-khoj-accent transition-colors">
-                Rooms
-              </Link>
+              <TopNav className="max-w-[calc(100vw-22rem)]" />
               <Link href="/profile" className="flex items-center gap-2 hover:text-khoj-accent transition-colors">
                 <span className="w-8 h-8 bg-khoj-accent rounded-full flex items-center justify-center text-white text-sm font-bold">
                   {khojUser?.name.charAt(0).toUpperCase()}
@@ -76,24 +60,7 @@ export function Navbar() {
           <div className="container mx-auto px-6 py-4 space-y-4">
             {isAuthenticated ? (
               <>
-                <Link href="/dashboard" className="block hover:text-khoj-accent">
-                  Dashboard
-                </Link>
-                <Link href="/community" className="block hover:text-khoj-accent">
-                  Community
-                </Link>
-                <Link href="/tournaments" className="block hover:text-khoj-accent">
-                  Tournaments
-                </Link>
-                <Link href="/leaderboard" className="block hover:text-khoj-accent">
-                  Leaderboard
-                </Link>
-                <Link href="/jobs" className="block hover:text-khoj-accent">
-                  Jobs
-                </Link>
-                <Link href="/rooms" className="block hover:text-khoj-accent">
-                  Rooms
-                </Link>
+                <TopNav />
                 <Link href="/profile" className="block hover:text-khoj-accent">
                   Profile
                 </Link>

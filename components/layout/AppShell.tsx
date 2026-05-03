@@ -4,12 +4,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useNotifications } from '@/hooks/useNotifications'
 import { useConversations } from '@/hooks/useMessages'
 import { resolveNotificationUrl } from '@/services/notificationService'
 import { Sidebar } from './Sidebar'
+import { TopNav } from './TopNav'
+import { PeopleSearchBox } from './PeopleSearchBox'
 import { PageLoader } from '@/components/ui/LoadingSpinner'
 import Link from 'next/link'
 import { ReactNode } from 'react'
@@ -261,41 +263,17 @@ function TopBar() {
   const { khojUser, firebaseUser } = useAuth()
   const { unreadCount } = useNotifications(khojUser?.uid ?? null)
   const { unreadTotal: unreadMessages } = useConversations(khojUser?.uid ?? null)
-  const [searchFocused, setSearchFocused] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const pathname = usePathname()
-
-  // Derive a human-readable page title from the path
-  const segment = pathname.split('/')[1] ?? 'dashboard'
-  const pageTitle = segment.charAt(0).toUpperCase() + segment.slice(1)
 
   const initial = khojUser?.name?.charAt(0).toUpperCase() ?? '?'
   const photoUrl = (firebaseUser as any)?.photoURL as string | null
 
   return (
-    <header className="fixed top-0 left-64 right-0 h-14 bg-khoj-bg border-b border-khoj-border z-30 flex items-center px-6 gap-4">
-      {/* Page breadcrumb */}
-      <span className="text-xs font-body font-semibold uppercase tracking-[0.15em] text-khoj-muted hidden sm:block">
-        {pageTitle}
-      </span>
+    <header className="fixed top-0 left-64 right-0 h-14 bg-khoj-bg border-b border-khoj-border z-30 flex items-center px-4 lg:px-6 gap-3">
+      <TopNav className="flex-1" />
 
-      {/* Search */}
-      <div
-        className={clsx(
-          'flex-1 max-w-xs flex items-center gap-2 bg-khoj-card border rounded-sm px-3 py-1.5 transition-colors duration-150',
-          searchFocused ? 'border-khoj-accent/40' : 'border-khoj-border'
-        )}
-      >
-        <span className="text-khoj-muted text-sm">⌕</span>
-        <input
-          type="text"
-          placeholder="Search…"
-          className="bg-transparent text-sm font-body text-khoj-text placeholder:text-khoj-muted outline-none w-full"
-          onFocus={() => setSearchFocused(true)}
-          onBlur={() => setSearchFocused(false)}
-        />
-      </div>
+      <PeopleSearchBox className="w-40 sm:w-48 xl:w-60" />
 
       <div className="flex items-center gap-1 ml-auto">
         {/* Messages icon */}

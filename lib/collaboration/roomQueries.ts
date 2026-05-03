@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore'
 import { requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLAB_COLLECTIONS as C } from './collabCollections'
+import type { Opportunity } from '@/lib/types'
 import type {
   CollabRoom,
   RoomMember,
@@ -35,6 +36,35 @@ import type {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function withId<T>(docSnap: { id: string; data(): unknown }): T {
   return { ...(docSnap.data() as object), id: docSnap.id } as T
+}
+
+function toMillis(value: unknown): number {
+  if (!value) return 0
+  if (typeof value === 'string') return new Date(value).getTime() || 0
+  if (value instanceof Date) return value.getTime()
+  if (typeof value === 'object' && value !== null) {
+    if ('toMillis' in value && typeof (value as { toMillis: unknown }).toMillis === 'function') {
+      return (value as { toMillis: () => number }).toMillis()
+    }
+    if ('toDate' in value && typeof (value as { toDate: unknown }).toDate === 'function') {
+      return (value as { toDate: () => Date }).toDate().getTime()
+    }
+  }
+  return 0
+}
+
+function toIso(value: unknown): string {
+  if (!value) return new Date().toISOString()
+  if (typeof value === 'string') return value
+  if (value instanceof Date) return value.toISOString()
+  if (typeof value === 'object' && value !== null && 'toDate' in value && typeof (value as { toDate: unknown }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate().toISOString()
+  }
+  return new Date().toISOString()
+}
+
+function sortByFieldDesc<T>(items: T[], field: keyof T): T[] {
+  return [...items].sort((a, b) => toMillis(b[field]) - toMillis(a[field]))
 }
 
 // ── Room ──────────────────────────────────────────────────────────────────────
@@ -63,22 +93,19 @@ export function subscribeStartupRooms(
   onChange: (rooms: CollabRoom[]) => void,
 ): () => void {
   const constraints: QueryConstraint[] = [
-    where('roomType', '==', 'startup'),
-    where('status', '==', 'active'),
     where('visibility', '==', 'public'),
-    orderBy('lastActivityAt', 'desc'),
-    limit(filters.limitCount ?? 30),
   ]
-
-  if (filters.isRecruiting === true) {
-    constraints.splice(-2, 0, where('isRecruiting', '==', true))
-  }
 
   const q = query(collection(requireFirestoreDb(), C.ROOMS), ...constraints)
   return onSnapshot(q, (snap) => {
-    let rooms = snap.docs.map((d) => withId<CollabRoom>(d))
+    let rooms = snap.docs
+      .map((d) => withId<CollabRoom>(d))
+      .filter((r) => r.roomType === 'startup' && r.status === 'active')
 
     // Client-side secondary filters (Firestore composite index limits)
+    if (filters.isRecruiting === true) {
+      rooms = rooms.filter((r) => r.isRecruiting === true)
+    }
     if (filters.stage) {
       rooms = rooms.filter((r) => r.startup?.stage === filters.stage)
     }
@@ -89,7 +116,7 @@ export function subscribeStartupRooms(
       rooms = rooms.filter((r) => r.startup?.locationMode === filters.locationMode)
     }
 
-    onChange(rooms)
+    onChange(sortByFieldDesc(rooms, 'lastActivityAt').slice(0, filters.limitCount ?? 30))
   }, (err) => {
     console.error('[roomQueries] subscribeStartupRooms error', err)
     onChange([])
@@ -148,11 +175,7 @@ export function subscribeStartupRoles(
       const roles = snap.docs
         .map((d) => withId<StartupRole>(d))
         .filter((r) => r.status === 'open' || r.status === 'paused')
-        .sort((a, b) => {
-          const ta = (a.createdAt as any)?.toMillis?.() ?? 0
-          const tb = (b.createdAt as any)?.toMillis?.() ?? 0
-          return tb - ta
-        })
+        .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))
       console.log('Roles fetched', roles)
       onChange(roles)
     },
@@ -192,11 +215,13 @@ export function subscribeMyRoleApplications(
   const q = query(
     collection(requireFirestoreDb(), C.ROOMS, roomId, C.ROLE_APPLICATIONS),
     where('applicantId', '==', userId),
-    orderBy('createdAt', 'desc'),
   )
   return onSnapshot(
     q,
-    (snap) => onChange(snap.docs.map((d) => withId<import('@/types/collaboration').RoleApplication>(d))),
+    (snap) => {
+      const apps = snap.docs.map((d) => withId<import('@/types/collaboration').RoleApplication>(d))
+      onChange(sortByFieldDesc(apps, 'createdAt'))
+    },
     (err) => { console.error('subscribeMyRoleApplications error:', err) },
   )
 }
@@ -207,13 +232,12 @@ export function subscribeRoomJoinRequests(
   roomId: string,
   onChange: (requests: JoinRequest[]) => void,
 ): () => void {
-  const q = query(
-    collection(requireFirestoreDb(), C.ROOMS, roomId, C.JOIN_REQUESTS),
-    where('status', '==', 'pending'),
-    orderBy('createdAt', 'desc'),
-  )
+  const q = query(collection(requireFirestoreDb(), C.ROOMS, roomId, C.JOIN_REQUESTS))
   return onSnapshot(q, (snap) => {
-    onChange(snap.docs.map((d) => withId<JoinRequest>(d)))
+    const requests = snap.docs
+      .map((d) => withId<JoinRequest>(d))
+      .filter((request) => request.status === 'pending')
+    onChange(sortByFieldDesc(requests, 'createdAt'))
   })
 }
 
@@ -225,11 +249,12 @@ export function subscribeUserJoinRequests(
   const q = query(
     collectionGroup(requireFirestoreDb(), C.JOIN_REQUESTS),
     where('userId', '==', userId),
-    where('status', '==', 'pending'),
-    orderBy('createdAt', 'desc'),
   )
   return onSnapshot(q, (snap) => {
-    onChange(snap.docs.map((d) => withId<JoinRequest>(d)))
+    const requests = snap.docs
+      .map((d) => withId<JoinRequest>(d))
+      .filter((request) => request.status === 'pending')
+    onChange(sortByFieldDesc(requests, 'createdAt'))
   })
 }
 
@@ -242,11 +267,12 @@ export function subscribeUserInvites(
   const q = query(
     collectionGroup(requireFirestoreDb(), C.INVITES),
     where('targetUserId', '==', targetUserId),
-    where('status', '==', 'pending'),
-    orderBy('createdAt', 'desc'),
   )
   return onSnapshot(q, (snap) => {
-    onChange(snap.docs.map((d) => withId<StartupInvite>(d)))
+    const invites = snap.docs
+      .map((d) => withId<StartupInvite>(d))
+      .filter((invite) => invite.status === 'pending')
+    onChange(sortByFieldDesc(invites, 'createdAt'))
   })
 }
 
@@ -255,13 +281,12 @@ export function subscribeRoomInvites(
   roomId: string,
   onChange: (invites: StartupInvite[]) => void,
 ): () => void {
-  const q = query(
-    collection(requireFirestoreDb(), C.ROOMS, roomId, C.INVITES),
-    where('status', '==', 'pending'),
-    orderBy('createdAt', 'desc'),
-  )
+  const q = query(collection(requireFirestoreDb(), C.ROOMS, roomId, C.INVITES))
   return onSnapshot(q, (snap) => {
-    onChange(snap.docs.map((d) => withId<StartupInvite>(d)))
+    const invites = snap.docs
+      .map((d) => withId<StartupInvite>(d))
+      .filter((invite) => invite.status === 'pending')
+    onChange(sortByFieldDesc(invites, 'createdAt'))
   })
 }
 
@@ -284,14 +309,12 @@ export function subscribeRoomSessions(
   roomId: string,
   onChange: (sessions: StartupSession[]) => void,
 ): () => void {
-  const q = query(
-    collection(requireFirestoreDb(), C.ROOMS, roomId, C.SESSIONS),
-    where('status', 'in', ['scheduled', 'live']),
-    orderBy('createdAt', 'desc'),
-    limit(10),
-  )
+  const q = query(collection(requireFirestoreDb(), C.ROOMS, roomId, C.SESSIONS))
   return onSnapshot(q, (snap) => {
-    onChange(snap.docs.map((d) => withId<StartupSession>(d)))
+    const sessions = snap.docs
+      .map((d) => withId<StartupSession>(d))
+      .filter((session) => session.status === 'scheduled' || session.status === 'live')
+    onChange(sortByFieldDesc(sessions, 'createdAt').slice(0, 10))
   })
 }
 
@@ -332,13 +355,12 @@ export function subscribeUserMemberships(
   userId: string,
   onChange: (memberships: UserRoomMembership[]) => void,
 ): () => void {
-  const q = query(
-    collection(requireFirestoreDb(), 'users', userId, C.ROOM_MEMBERSHIPS),
-    where('status', '==', 'active'),
-    orderBy('joinedAt', 'desc'),
-  )
+  const q = query(collection(requireFirestoreDb(), 'users', userId, C.ROOM_MEMBERSHIPS))
   return onSnapshot(q, (snap) => {
-    onChange(snap.docs.map((d) => d.data() as UserRoomMembership))
+    const memberships = snap.docs
+      .map((d) => d.data() as UserRoomMembership)
+      .filter((membership) => membership.status === 'active')
+    onChange(sortByFieldDesc(memberships, 'joinedAt'))
   })
 }
 
@@ -347,12 +369,9 @@ export function subscribeFounderInboxCounts(
   roomId: string,
   onChange: (counts: { pendingRequests: number }) => void,
 ): () => void {
-  const q = query(
-    collection(requireFirestoreDb(), C.ROOMS, roomId, C.JOIN_REQUESTS),
-    where('status', '==', 'pending'),
-  )
+  const q = query(collection(requireFirestoreDb(), C.ROOMS, roomId, C.JOIN_REQUESTS))
   return onSnapshot(q, (snap) => {
-    onChange({ pendingRequests: snap.size })
+    onChange({ pendingRequests: snap.docs.filter((item) => item.data().status === 'pending').length })
   })
 }
 
@@ -394,13 +413,14 @@ export function subscribeMyAccess(
 // ── User room memberships (one-shot) ─────────────────────────────────────────
 export async function getUserMemberships(userId: string): Promise<UserRoomMembership[]> {
   const snap = await getDocs(
-    query(
-      collection(requireFirestoreDb(), 'users', userId, C.ROOM_MEMBERSHIPS),
-      where('status', '==', 'active'),
-      orderBy('joinedAt', 'desc'),
-    ),
+    query(collection(requireFirestoreDb(), 'users', userId, C.ROOM_MEMBERSHIPS)),
   )
-  return snap.docs.map((d) => d.data() as UserRoomMembership)
+  return sortByFieldDesc(
+    snap.docs
+      .map((d) => d.data() as UserRoomMembership)
+      .filter((membership) => membership.status === 'active'),
+    'joinedAt',
+  )
 }
 
 // ── Portfolio activities ──────────────────────────────────────────────────────
@@ -428,14 +448,27 @@ export async function getPortfolioActivities(
 }
 
 // ── Opportunity Market ────────────────────────────────────────────────────────
-import type { Opportunity } from '@/lib/types'
+
+function docToOpportunity(id: string, data: Record<string, unknown>): Opportunity {
+  return {
+    ...(data as Omit<Opportunity, 'id'>),
+    id,
+    createdAt: toIso(data.createdAt),
+    updatedAt: data.updatedAt ? toIso(data.updatedAt) : undefined,
+    skillsRequired: Array.isArray(data.skillsRequired) ? data.skillsRequired.map(String) : [],
+  }
+}
 
 export async function getOpenOpportunities(
   type?: string,
   limitCount = 30,
 ): Promise<Opportunity[]> {
-  const constraints: QueryConstraint[] = [where('status', '==', 'open'), limit(limitCount)]
-  if (type) constraints.unshift(where('type', '==', type))
-  const snap = await getDocs(query(collection(requireFirestoreDb(), 'opportunities'), ...constraints))
-  return snap.docs.map((d) => ({ ...(d.data() as object), id: d.id } as Opportunity))
+  const snap = await getDocs(
+    query(collection(requireFirestoreDb(), 'opportunities'), where('status', '==', 'open')),
+  )
+  const opportunities = snap.docs
+    .map((d) => docToOpportunity(d.id, d.data() as Record<string, unknown>))
+    .filter((opportunity) => !type || opportunity.type === type)
+
+  return sortByFieldDesc(opportunities, 'createdAt').slice(0, limitCount)
 }

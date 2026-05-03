@@ -13,6 +13,7 @@ import { ReactNode } from 'react'
 // Routes that use AppShell (sidebar + topbar). Add more as pages are migrated.
 const APP_SHELL_PREFIXES = [
   '/dashboard',
+  '/khoj-ai',
   '/messages',
   '/community',
   '/rooms',
@@ -22,12 +23,14 @@ const APP_SHELL_PREFIXES = [
   '/network',
   '/profile',
   '/matches',
+  '/search',
   '/settings',
   '/admin',
   '/recruiter',
   '/talent',
   '/payment-success',
   '/payment-failure',
+  '/studio',
 ]
 
 export function ClientLayout({ children }: { children: ReactNode }) {

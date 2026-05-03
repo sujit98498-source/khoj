@@ -1,20 +1,14 @@
 // services/portfolioService.ts
 // Data access layer for public portfolio pages.
 //
-// HOW TO CONNECT A REAL DATABASE:
-//   1. Replace the mock lookup below with a Firestore/Supabase/API call.
-//   2. The function signatures stay the same — no changes needed in components.
-//   3. Example Firestore swap:
-//        const snap = await getDoc(doc(db, 'portfolios', uid))
-//        return snap.exists() ? (snap.data() as PortfolioUser) : null
-//
-// The mock falls back to KhojUser data if a portfolio document doesn't exist yet,
-// so the page always shows *something* for every registered user.
+// Private beta source of truth:
+//   users/{uid} stores both auth/account fields and extended public profile fields.
+// Mock portfolio data remains only as a demo fallback for seeded sample users.
 
 import { getUserById, getMatchHistory } from '@/services/userService'
 import { getUserPosts } from '@/services/communityService'
 import { getMockPortfolioUser } from '@/lib/portfolio/mockPortfolioData'
-import { PortfolioUser, CommunityPost, MatchHistoryEntry } from '@/lib/types'
+import { PortfolioUser, CommunityPost, MatchHistoryEntry, KhojUser } from '@/lib/types'
 
 export interface FullPortfolioData {
   user: PortfolioUser
@@ -22,45 +16,63 @@ export interface FullPortfolioData {
   matchHistory: MatchHistoryEntry[]
 }
 
+type UserProfileDoc = KhojUser & Partial<PortfolioUser>
+
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : []
+}
+
+function asObject<T extends object>(value: unknown, fallback: T): T {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as T) : fallback
+}
+
+function buildPortfolioUser(user: UserProfileDoc): PortfolioUser {
+  return {
+    uid: user.uid,
+    name: user.name,
+    username: user.username,
+    headline: user.headline,
+    bio: user.bio,
+    field: user.field,
+    avatarUrl: user.avatarUrl,
+    availableForOpportunities: user.availableForOpportunities ?? false,
+    contactVisible: user.contactVisible ?? false,
+    contactEmail: user.contactEmail,
+    location: user.location,
+    country: user.country,
+    verifiedChampion: user.verifiedChampion,
+    xp: Number(user.xp ?? 0),
+    rank: Number(user.rank ?? 0),
+    wins: Number(user.wins ?? 0),
+    matchesPlayed: Number(user.matchesPlayed ?? 0),
+    skills: asArray<string>(user.skills),
+    createdAt: user.createdAt,
+    achievements: asArray(user.achievements),
+    projects: asArray(user.projects),
+    competitions: asArray(user.competitions),
+    socialLinks: asObject(user.socialLinks, {}),
+    education: asArray(user.education),
+    experience: asArray(user.experience),
+  }
+}
+
 /**
  * Fetch everything needed to render a public portfolio page.
- * Priority: mock data (rich) → live KhojUser (basic fields only) → null
+ * Priority: live users/{uid} profile → seeded mock profile → null.
  */
 export async function getFullPortfolioData(uid: string): Promise<FullPortfolioData | null> {
-  // 1. Try rich mock / future DB portfolio document
-  const mockUser = getMockPortfolioUser(uid)
-
-  if (mockUser) {
-    const [posts, matchHistory] = await Promise.all([
-      getUserPosts(uid).catch(() => [] as CommunityPost[]),
-      getMatchHistory(uid).catch(() => [] as MatchHistoryEntry[]),
-    ])
-    return { user: mockUser, posts, matchHistory }
-  }
-
-  // 2. Fallback: build minimal PortfolioUser from KhojUser document
   const [khojUser, posts, matchHistory] = await Promise.all([
     getUserById(uid).catch(() => null),
     getUserPosts(uid).catch(() => [] as CommunityPost[]),
     getMatchHistory(uid).catch(() => [] as MatchHistoryEntry[]),
   ])
 
-  if (!khojUser) return null
-
-  const fallbackUser: PortfolioUser = {
-    uid: khojUser.uid,
-    name: khojUser.name,
-    xp: khojUser.xp,
-    rank: khojUser.rank,
-    wins: khojUser.wins,
-    matchesPlayed: khojUser.matchesPlayed,
-    skills: khojUser.skills,
-    createdAt: khojUser.createdAt,
-    achievements: [],
-    projects: [],
-    competitions: [],
-    socialLinks: {},
+  if (khojUser) {
+    return { user: buildPortfolioUser(khojUser as UserProfileDoc), posts, matchHistory }
   }
 
-  return { user: fallbackUser, posts, matchHistory }
+  const mockUser = getMockPortfolioUser(uid)
+  if (!mockUser) return null
+
+  return { user: mockUser, posts, matchHistory }
 }

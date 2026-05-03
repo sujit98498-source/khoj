@@ -161,16 +161,41 @@ export function NetworkUserCard({ user }: NetworkUserCardProps) {
             <p className="truncate text-sm font-display font-semibold text-khoj-text hover:text-khoj-accent">
               {user.name}
             </p>
+            {user.username && (
+              <span className="truncate text-xs text-khoj-subtle">@{user.username}</span>
+            )}
             {typeof user.xp === 'number' && (
               <span className="rounded-sm border border-khoj-border px-1.5 py-0.5 text-[10px] font-mono text-khoj-subtle">
                 {user.xp.toLocaleString()} XP
               </span>
             )}
+            {typeof user.rank === 'number' && user.rank > 0 && (
+              <span className="rounded-sm border border-khoj-accent/30 bg-khoj-accent/10 px-1.5 py-0.5 text-[10px] font-mono text-khoj-accent">
+                Rank #{user.rank}
+              </span>
+            )}
           </div>
           <p className="mt-0.5 truncate text-xs text-khoj-subtle">
-            {user.headline || user.role || user.username ? (user.headline || user.role || `@${user.username}`) : 'KHOJ builder'}
+            {user.headline || user.role || user.location || 'KHOJ builder'}
           </p>
           {user.bio && <p className="mt-1 line-clamp-1 text-xs text-khoj-muted">{user.bio}</p>}
+          {(user.skills?.length ?? 0) > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {user.skills!.slice(0, 5).map((skill) => (
+                <span
+                  key={skill}
+                  className="rounded-sm border border-khoj-teal/25 bg-khoj-teal/10 px-2 py-0.5 text-[10px] font-semibold text-khoj-teal"
+                >
+                  {skill}
+                </span>
+              ))}
+              {user.skills!.length > 5 && (
+                <span className="px-1 py-0.5 text-[10px] text-khoj-subtle">
+                  +{user.skills!.length - 5}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </Link>
 

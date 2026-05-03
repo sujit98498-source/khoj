@@ -92,7 +92,7 @@ export function StartupRoomView({ room, currentUserId, currentUserName, currentU
     { id: 'ai_evaluation',  label: 'AI Evaluation' },
     { id: 'ai_builder',     label: 'AI Builder' },
     { id: 'inbox',          label: 'Inbox',         badge: counts.total, hidden: !canManage },
-  ], [roles.length, members.length, myMember, canManage, counts.pendingRequests, counts.pendingInvites])
+  ], [roles.length, members.length, myMember, canManage, counts.total])
 
   function openJoinModal(roleId: string) {
     const role = roles.find((r) => r.id === roleId) ?? null

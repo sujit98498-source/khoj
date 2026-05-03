@@ -3,11 +3,9 @@
 //
 // ── HOW TO CONNECT A REAL DATABASE ────────────────────────────────────────────
 //
-//  Firestore (recommended for this stack):
-//    import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
-//    import { requireFirestoreDb } from '@/lib/firebase/config'
-//    const ref = doc(requireFirestoreDb(), 'portfolios', uid)
-//    await setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true })
+//  Firestore:
+//    Profile fields are merged into the existing users/{uid} document so KHOJ
+//    keeps one account/profile source of truth during private beta.
 //
 //  Supabase:
 //    await supabase.from('portfolios').upsert({ uid, ...data, updated_at: new Date() })
@@ -28,6 +26,9 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { doc, setDoc } from 'firebase/firestore'
+import { requireFirestoreDb } from '@/lib/firebase/config'
+import { COLLECTIONS } from '@/lib/firebase/collections'
 import { PortfolioUser } from '@/lib/types'
 
 const DRAFT_KEY = 'khoj_profile_draft'
@@ -69,24 +70,31 @@ export { SAVE_DEBOUNCE_MS }
 
 /**
  * Save the user's profile data.
- *
- * Currently: merges into localStorage mock store so the public profile page
- *            can read it in the same session (demo-only).
- * Future:    replace the body with a real DB call (see instructions above).
  */
 export async function saveProfileData(
   uid: string,
   data: Partial<PortfolioUser>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // ── MOCK SAVE: persist to localStorage under a key the portfolio service reads ──
-    const existing = localStorage.getItem(`khoj_portfolio_${uid}`)
-    const current: Partial<PortfolioUser> = existing ? JSON.parse(existing) : {}
-    const merged = { ...current, ...data, uid }
-    localStorage.setItem(`khoj_portfolio_${uid}`, JSON.stringify(merged))
+    const existing = loadSavedProfile(uid) ?? {}
+    const merged = sanitizeProfileData({ ...existing, ...data, uid })
 
-    // Simulate network latency in dev
-    await new Promise((r) => setTimeout(r, 400))
+    await setDoc(
+      doc(requireFirestoreDb(), COLLECTIONS.USERS, uid),
+      {
+        ...merged,
+        uid,
+        lastActive: new Date().toISOString(),
+        profileUpdatedAt: new Date().toISOString(),
+      },
+      { merge: true },
+    )
+
+    try {
+      localStorage.setItem(`khoj_portfolio_${uid}`, JSON.stringify(merged))
+    } catch {
+      // Cache is best-effort; Firestore is the source of truth.
+    }
 
     clearDraft(uid)
     return { success: true }
@@ -106,4 +114,24 @@ export function loadSavedProfile(uid: string): Partial<PortfolioUser> | null {
   } catch {
     return null
   }
+}
+
+function sanitizeProfileData(data: Partial<PortfolioUser>): Partial<PortfolioUser> {
+  return Object.fromEntries(
+    Object.entries(data)
+      .filter(([, value]) => value !== undefined)
+      .map(([key, value]) => [key, sanitizeValue(value)])
+  ) as Partial<PortfolioUser>
+}
+
+function sanitizeValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitizeValue)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, nested]) => nested !== undefined)
+        .map(([key, nested]) => [key, sanitizeValue(nested)])
+    )
+  }
+  return value
 }

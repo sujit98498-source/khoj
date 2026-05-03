@@ -7,6 +7,8 @@ import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
+import { PeopleSearchBox } from '@/components/layout/PeopleSearchBox'
+import { TopNav } from '@/components/layout/TopNav'
 import clsx from 'clsx'
 
 const STUDIO_NAV = [
@@ -100,7 +102,13 @@ export default function StudioLayout({ children }: { children: React.ReactNode }
 
       {/* Main content */}
       <div className="ml-60 min-h-screen flex-1 overflow-y-auto">
-        {children}
+        <header className="fixed left-60 right-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-[#1e1e2e] bg-[#0a0b0f] px-4 lg:px-6">
+          <TopNav className="flex-1" />
+          <PeopleSearchBox className="w-40 sm:w-48 xl:w-60" />
+        </header>
+        <main className="pt-14">
+          {children}
+        </main>
       </div>
     </div>
   )

@@ -434,7 +434,11 @@ service cloud.firestore {
           get(/databases/$(database)/documents/rooms/$(roomId)).data.visibility == 'public' ||
           exists(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid))
         );
-        allow create: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() && (
+          request.auth.uid == userId ||
+          get(/databases/$(database)/documents/rooms/$(roomId)).data.createdBy == request.auth.uid ||
+          get(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid)).data.permissions.manageMembers == true
+        );
         allow update: if isSignedIn() && (
           request.auth.uid == userId ||
           get(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid)).data.permissions.manageMembers == true

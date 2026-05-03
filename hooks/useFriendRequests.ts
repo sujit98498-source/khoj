@@ -37,8 +37,7 @@ export function useIncomingRequests(myUid: string | null) {
 
     const q = query(
       collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
-      where('toUserId', '==', myUid),
-      where('status', '==', 'pending')
+      where('toUserId', '==', myUid)
     )
 
     const unsub = onSnapshot(
@@ -61,7 +60,7 @@ export function useIncomingRequests(myUid: string | null) {
               createdAt: tsToISO(data.createdAt),
               updatedAt: tsToISO(data.updatedAt),
             } as FriendRequest
-          })
+          }).filter((request) => request.status === 'pending')
         )
         setLoading(false)
       },
@@ -85,8 +84,7 @@ export function useSentRequests(myUid: string | null) {
 
     const q = query(
       collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
-      where('fromUserId', '==', myUid),
-      where('status', '==', 'pending')
+      where('fromUserId', '==', myUid)
     )
 
     const unsub = onSnapshot(
@@ -109,7 +107,7 @@ export function useSentRequests(myUid: string | null) {
               createdAt: tsToISO(data.createdAt),
               updatedAt: tsToISO(data.updatedAt),
             } as FriendRequest
-          })
+          }).filter((request) => request.status === 'pending')
         )
         setLoading(false)
       },
@@ -230,14 +228,15 @@ export function useFriendStatus(
 
     const sentQuery = query(
       collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
-      where('fromUserId', '==', myUid),
-      where('toUserId', '==', theirUid),
-      where('status', '==', 'pending')
+      where('fromUserId', '==', myUid)
     )
     const unsubSent = onSnapshot(
       sentQuery,
       (snap) => {
-        sentRequestId = snap.docs[0]?.id ?? null
+        sentRequestId = snap.docs.find((item) => {
+          const data = item.data()
+          return data.toUserId === theirUid && data.status === 'pending'
+        })?.id ?? null
         deriveStatus()
         markLoaded()
       },
@@ -250,14 +249,15 @@ export function useFriendStatus(
 
     const receivedQuery = query(
       collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
-      where('fromUserId', '==', theirUid),
-      where('toUserId', '==', myUid),
-      where('status', '==', 'pending')
+      where('toUserId', '==', myUid)
     )
     const unsubReceived = onSnapshot(
       receivedQuery,
       (snap) => {
-        receivedRequestId = snap.docs[0]?.id ?? null
+        receivedRequestId = snap.docs.find((item) => {
+          const data = item.data()
+          return data.fromUserId === theirUid && data.status === 'pending'
+        })?.id ?? null
         deriveStatus()
         markLoaded()
       },

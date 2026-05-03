@@ -7,7 +7,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  limit,
   onSnapshot,
   query,
   serverTimestamp,
@@ -20,18 +19,21 @@ import { COLLECTIONS } from '@/lib/firebase/collections'
 import type { Friendship, KhojUser, PortfolioUser } from '@/lib/types'
 import { getFullPortfolioData } from '@/services/portfolioService'
 import { createNotification } from '@/services/notificationService'
-import { areFriends, getFriends } from '@/services/friendRequestService'
+import { areFriends, getFriendRequestBetween, getFriends } from '@/services/friendRequestService'
 
 export type NetworkTab = 'connections' | 'followers' | 'following'
 
 export interface NetworkUserSnapshot {
   uid: string
   name: string
+  email?: string
   username?: string
   avatarUrl?: string
   headline?: string
   role?: string
   bio?: string
+  skills?: string[]
+  location?: string
   xp?: number
   rank?: number
   connectedAt?: string
@@ -69,11 +71,14 @@ function toNetworkUser(id: string, data: Record<string, unknown>): NetworkUserSn
   return {
     uid: String(data.uid ?? data.userId ?? id),
     name: String(data.name ?? data.userName ?? 'KHOJ User'),
+    email: data.email ? String(data.email) : undefined,
     username: data.username ? String(data.username) : undefined,
     avatarUrl: data.avatarUrl ? String(data.avatarUrl) : data.userPhoto ? String(data.userPhoto) : undefined,
     headline: data.headline ? String(data.headline) : undefined,
     role: data.role ? String(data.role) : undefined,
     bio: data.bio ? String(data.bio) : undefined,
+    skills: Array.isArray(data.skills) ? data.skills.map(String) : undefined,
+    location: data.location ? String(data.location) : undefined,
     xp: typeof data.xp === 'number' ? data.xp : undefined,
     rank: typeof data.rank === 'number' ? data.rank : undefined,
     connectedAt: toIso(data.connectedAt),
@@ -328,23 +333,10 @@ export async function getConnectionStatus(
 ): Promise<'none' | 'pending_sent' | 'pending_received' | 'connected'> {
   if (await areFriends(currentUserId, targetUserId)) return 'connected'
 
-  const sent = await getDocs(query(
-    collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
-    where('fromUserId', '==', currentUserId),
-    where('toUserId', '==', targetUserId),
-    where('status', '==', 'pending'),
-    limit(1)
-  ))
-  if (!sent.empty) return 'pending_sent'
-
-  const received = await getDocs(query(
-    collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
-    where('fromUserId', '==', targetUserId),
-    where('toUserId', '==', currentUserId),
-    where('status', '==', 'pending'),
-    limit(1)
-  ))
-  if (!received.empty) return 'pending_received'
+  const request = await getFriendRequestBetween(currentUserId, targetUserId)
+  if (request?.status === 'pending') {
+    return request.fromUserId === currentUserId ? 'pending_sent' : 'pending_received'
+  }
 
   return 'none'
 }

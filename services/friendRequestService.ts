@@ -220,18 +220,21 @@ export async function getFriendRequestBetween(
 ): Promise<FriendRequest | null> {
   const q1 = query(
     collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
-    where('fromUserId', '==', uid1),
-    where('toUserId', '==', uid2)
+    where('fromUserId', '==', uid1)
   )
   const q2 = query(
     collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
-    where('fromUserId', '==', uid2),
     where('toUserId', '==', uid1)
   )
 
   const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)])
   const docs = [...snap1.docs, ...snap2.docs]
     .map((d) => ({ id: d.id, data: d.data() as Record<string, unknown> }))
+    .filter((item) => {
+      const from = String(item.data.fromUserId ?? '')
+      const to = String(item.data.toUserId ?? '')
+      return (from === uid1 && to === uid2) || (from === uid2 && to === uid1)
+    })
     .sort((a, b) => tsToMillis(b.data.updatedAt ?? b.data.createdAt) - tsToMillis(a.data.updatedAt ?? a.data.createdAt))
 
   const pending = docs.find((item) => item.data.status === 'pending')
@@ -254,11 +257,12 @@ export async function areFriends(uid1: string, uid2: string): Promise<boolean> {
 export async function getIncomingRequests(userId: string): Promise<FriendRequest[]> {
   const q = query(
     collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
-    where('toUserId', '==', userId),
-    where('status', '==', 'pending')
+    where('toUserId', '==', userId)
   )
   const snap = await getDocs(q)
-  return snap.docs.map((d) => docToRequest(d.id, d.data() as Record<string, unknown>))
+  return snap.docs
+    .map((d) => docToRequest(d.id, d.data() as Record<string, unknown>))
+    .filter((request) => request.status === 'pending')
 }
 
 /**
@@ -267,11 +271,12 @@ export async function getIncomingRequests(userId: string): Promise<FriendRequest
 export async function getSentRequests(userId: string): Promise<FriendRequest[]> {
   const q = query(
     collection(requireFirestoreDb(), COLLECTIONS.FRIEND_REQUESTS),
-    where('fromUserId', '==', userId),
-    where('status', '==', 'pending')
+    where('fromUserId', '==', userId)
   )
   const snap = await getDocs(q)
-  return snap.docs.map((d) => docToRequest(d.id, d.data() as Record<string, unknown>))
+  return snap.docs
+    .map((d) => docToRequest(d.id, d.data() as Record<string, unknown>))
+    .filter((request) => request.status === 'pending')
 }
 
 /**
