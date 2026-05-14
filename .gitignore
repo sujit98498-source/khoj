@@ -17,6 +17,20 @@ out/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+firebase-debug.log*
+*.log
+
+# Expo / React Native
+.expo/
+apps/mobile/.expo/
+apps/mobile/node_modules/
+
+# Secret / private keys
+serviceAccountKey.json
+*service-account*.json
+*private-key*.json
+*.pem
+*.key
 
 # OS
 .DS_Store

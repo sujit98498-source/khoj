@@ -19,5 +19,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.d.ts", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "khoj-app", "functions"]
+  "exclude": ["node_modules", "khoj-app", "functions", "apps", "packages"]
 }

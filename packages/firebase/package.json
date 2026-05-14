@@ -1,0 +1,17 @@
+{
+  "name": "@khoj/firebase",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "firebase": "^10.0.0"
+  },
+  "devDependencies": {
+    "firebase": "^10.12.0",
+    "typescript": "^5"
+  }
+}

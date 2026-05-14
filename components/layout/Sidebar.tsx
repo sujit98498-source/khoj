@@ -13,16 +13,16 @@ import { XPBar } from '@/components/ui/XPBar'
 
 // ── Nav section definitions ───────────────────────────────────────────────────
 
+// ── KHOJ V1 — Gamer-focused navigation only ────────────────────────────────
+// Non-gaming features (Jobs, Studio, KHOJ AI, Network, Recruiter, Tracks)
+// are archived and hidden from navigation for KHOJ V1.
 const MAIN_NAV = [
-  { href: '/khoj-ai',      label: 'KHOJ AI',      icon: '⚡' },
-  { href: '/dashboard',    label: 'Dashboard',    icon: '⬡' },
-  { href: '/arena',        label: 'Arena',        icon: '▶' },
-  { href: '/community',    label: 'Community',    icon: '◎' },
-  { href: '/tournaments',  label: 'Tournaments',  icon: '◈' },
-  { href: '/leaderboard',  label: 'Leaderboard',  icon: '▲' },
-  { href: '/jobs',         label: 'Jobs',         icon: '◉' },
-  { href: '/rooms',        label: 'Rooms',        icon: '▣' },
-  { href: '/studio',       label: 'Studio',       icon: '🎬' },
+  { href: '/dashboard',    label: 'Home',          icon: '⬡' },
+  { href: '/community',    label: 'Gaming Feed',   icon: '◎' },
+  { href: '/tournaments',  label: 'Tournaments',   icon: '◈' },
+  { href: '/rooms',        label: 'Squads',        icon: '▣' },
+  { href: '/arena',        label: 'Arena',         icon: '▶' },
+  { href: '/leaderboard',  label: 'Leaderboard',   icon: '▲' },
 ]
 
 const PERSONAL_NAV = [
@@ -115,7 +115,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-khoj-card border-r border-khoj-border flex flex-col z-40">
+    <aside className="hidden md:flex md:flex-col fixed left-0 top-0 h-full w-64 bg-khoj-card border-r border-khoj-border z-40">
 
       {/* ── Logo ── */}
       <div className="px-6 py-5 border-b border-khoj-border flex-shrink-0">

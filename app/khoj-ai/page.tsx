@@ -1,18 +1,4 @@
-'use client'
-
-import { AppShell } from '@/components/layout/AppShell'
-import { KhojAssistantChat } from '@/components/ai/KhojAssistantChat'
-
-export default function KhojAIPage() {
-  return (
-    <AppShell>
-      <div className="animate-slide-up pb-8">
-        <KhojAssistantChat
-          title="KHOJ AI"
-          subtitle="Your startup coach and learning assistant for My Growth Roadmap, Startup Rooms, Jobs, and practical execution."
-          initialMode="startup"
-        />
-      </div>
-    </AppShell>
-  )
-}
+// ARCHIVED — KHOJ AI startup advisor is hidden in KHOJ V1 (gamer platform).
+// Preserved for future KHOJ versions. Redirecting to Home.
+import { redirect } from 'next/navigation'
+export default function KhojAIPage() { redirect('/dashboard') }

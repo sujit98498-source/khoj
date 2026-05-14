@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "KHOJ Gaming",
+    "slug": "khoj-gaming",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "khoj",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0A0A0F"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.khoj.gaming",
+      "infoPlist": {
+        "NSCameraUsageDescription": "KHOJ uses your camera for video calls with teammates.",
+        "NSMicrophoneUsageDescription": "KHOJ uses your microphone for voice and video calls."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0F"
+      },
+      "package": "com.khoj.gaming",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "KHOJ uses your microphone for voice calls."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -4,7 +4,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useNotifications } from '@/hooks/useNotifications'
 import { useConversations } from '@/hooks/useMessages'
@@ -218,18 +218,6 @@ function ProfileDropdown({
         </Link>
 
         <Link
-          href="/studio"
-          onClick={onClose}
-          className="flex items-center gap-3 px-4 py-2.5 text-sm text-khoj-subtle hover:text-khoj-text hover:bg-khoj-bg/60 transition-colors"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-          </svg>
-          <span className="flex-1">KHOJ Studio</span>
-          <span className="text-[9px] font-bold bg-[#ff5a00] text-white px-1.5 py-0.5 rounded">NEW</span>
-        </Link>
-
-        <Link
           href="/settings"
           onClick={onClose}
           className="flex items-center gap-3 px-4 py-2.5 text-sm text-khoj-subtle hover:text-khoj-text hover:bg-khoj-bg/60 transition-colors"
@@ -270,7 +258,7 @@ function TopBar() {
   const photoUrl = (firebaseUser as any)?.photoURL as string | null
 
   return (
-    <header className="fixed top-0 left-64 right-0 h-14 bg-khoj-bg border-b border-khoj-border z-30 flex items-center px-4 lg:px-6 gap-3">
+    <header className="fixed top-0 left-0 md:left-64 right-0 h-14 bg-khoj-bg border-b border-khoj-border z-30 flex items-center px-4 lg:px-6 gap-3">
       <TopNav className="flex-1" />
 
       <PeopleSearchBox className="w-40 sm:w-48 xl:w-60" />
@@ -347,6 +335,52 @@ function TopBar() {
   )
 }
 
+// ── Mobile bottom navigation (web — shown only on small screens) ───────────────
+const MOBILE_NAV_ITEMS = [
+  { href: '/dashboard',    label: 'Home',     icon: '⬡' },
+  { href: '/community',    label: 'Feed',     icon: '◎' },
+  { href: '/tournaments',  label: 'Events',   icon: '◈' },
+  { href: '/messages',     label: 'Messages', icon: '✉' },
+  { href: '/profile',      label: 'Profile',  icon: '◎' },
+] as const
+
+function MobileBottomNav() {
+  const pathname = usePathname()
+  const { khojUser } = useAuth()
+  const { unreadTotal: unreadMessages } = useConversations(khojUser?.uid ?? null)
+
+  return (
+    <nav
+      aria-label="Mobile navigation"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-khoj-card border-t border-khoj-border flex items-center justify-around px-1 py-2"
+    >
+      {MOBILE_NAV_ITEMS.map(({ href, label, icon }) => {
+        const dest = href === '/profile' && khojUser?.uid ? `/profile/${khojUser.uid}` : href
+        const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'))
+        const badge = href === '/messages' ? unreadMessages : 0
+        return (
+          <Link
+            key={href}
+            href={dest}
+            className={clsx(
+              'relative flex flex-col items-center gap-0.5 min-w-[52px] py-1 px-2 rounded-sm transition-colors',
+              active ? 'text-khoj-accent' : 'text-khoj-subtle',
+            )}
+          >
+            <span className="text-xl leading-none">{icon}</span>
+            <span className="text-[9px] font-body font-semibold">{label}</span>
+            {badge > 0 && (
+              <span className="absolute -top-0.5 right-0 min-w-[15px] h-[15px] bg-khoj-accent rounded-full flex items-center justify-center text-[8px] font-bold text-white px-0.5">
+                {badge > 99 ? '99+' : badge}
+              </span>
+            )}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
+
 // ── AppShell ──────────────────────────────────────────────────────────────────
 
 export function AppShell({ children, fullWidth = false }: AppShellProps) {
@@ -364,22 +398,25 @@ export function AppShell({ children, fullWidth = false }: AppShellProps) {
 
   return (
     <div className="flex min-h-screen bg-khoj-bg">
-      {/* Fixed left sidebar */}
+      {/* Fixed left sidebar — hidden on mobile */}
       <Sidebar />
 
       {/* Right side: topbar + scrollable content */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
         <TopBar />
         {fullWidth ? (
-          <main className="flex-1 mt-14 overflow-hidden" style={{ height: 'calc(100vh - 3.5rem)' }}>
+          <main className="flex-1 mt-14 overflow-hidden pb-16 md:pb-0" style={{ height: 'calc(100vh - 3.5rem)' }}>
             {children}
           </main>
         ) : (
-          <main className="flex-1 mt-14 overflow-y-auto">
-            <div className="max-w-7xl px-8 py-8">{children}</div>
+          <main className="flex-1 mt-14 overflow-y-auto pb-20 md:pb-8">
+            <div className="max-w-7xl px-4 md:px-8 py-6 md:py-8">{children}</div>
           </main>
         )}
       </div>
+
+      {/* Mobile bottom navigation — hidden on md+ */}
+      <MobileBottomNav />
     </div>
   )
 }

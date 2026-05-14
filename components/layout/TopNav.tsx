@@ -4,16 +4,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 
+// ── KHOJ V1 — Gamer-focused routes only ──────────────────────────────────
 const TOP_NAV_ITEMS = [
-  { href: '/khoj-ai', label: 'KHOJ AI' },
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/arena', label: 'Arena' },
-  { href: '/community', label: 'Community' },
-  { href: '/tournaments', label: 'Tournaments' },
-  { href: '/leaderboard', label: 'Leaderboard' },
-  { href: '/jobs', label: 'Jobs' },
-  { href: '/rooms', label: 'Rooms' },
-  { href: '/studio', label: 'Studio' },
+  { href: '/dashboard',    label: 'Home' },
+  { href: '/community',    label: 'Gaming Feed' },
+  { href: '/tournaments',  label: 'Tournaments' },
+  { href: '/rooms',        label: 'Squads' },
+  { href: '/arena',        label: 'Arena' },
+  { href: '/leaderboard',  label: 'Leaderboard' },
 ] as const
 
 function isActivePath(pathname: string, href: string): boolean {
