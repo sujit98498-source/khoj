@@ -172,32 +172,31 @@ export default function DashboardPage() {
             )}
           </Card>
 
-          {/* Continue Learning */}
+          {/* My Progress */}
           <Card>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-khoj-teal" aria-hidden>◫</span>
-                <h3 className="font-display font-bold text-sm">Continue Learning</h3>
+                <h3 className="font-display font-bold text-sm">My Progress</h3>
               </div>
-              <Link href="/tracks" className="text-xs text-khoj-accent hover:text-orange-400 font-semibold">
-                All tracks →
+              <Link href="/khoj-ai" className="text-xs text-khoj-accent hover:text-orange-400 font-semibold">
+                Plan roadmap →
               </Link>
             </div>
             {activeEnrollments.length === 0 ? (
               <div className="text-center py-4 space-y-2">
-                <p className="text-khoj-text text-xs font-bold">No active tracks</p>
-                <p className="text-khoj-subtle text-[11px]">Start a track to build proof and get hired faster.</p>
-                <Link href="/tracks">
-                  <Button size="sm" className="mt-2">Browse Tracks</Button>
+                <p className="text-khoj-text text-xs font-bold">No active roadmap items</p>
+                <p className="text-khoj-subtle text-[11px]">Use KHOJ AI to plan your next proof milestone.</p>
+                <Link href="/khoj-ai">
+                  <Button size="sm" className="mt-2">Open KHOJ AI</Button>
                 </Link>
               </div>
             ) : (
               <div className="space-y-3">
                 {activeEnrollments.map((e) => (
-                  <Link
+                  <div
                     key={e.trackId}
-                    href={`/tracks/${e.trackId}${e.lastLessonId ? `/learn/${e.lastLessonId}` : ''}`}
-                    className="flex items-center gap-3 p-2.5 rounded-sm border border-khoj-border hover:border-khoj-accent/40 transition-colors group"
+                    className="flex items-center gap-3 p-2.5 rounded-sm border border-khoj-border"
                   >
                     <div className="w-9 h-9 rounded-sm overflow-hidden bg-zinc-900 flex-shrink-0">
                       {e.thumbnailUrl
@@ -206,13 +205,13 @@ export default function DashboardPage() {
                       }
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-khoj-text text-xs font-semibold truncate group-hover:text-khoj-accent transition-colors">{e.title}</p>
+                      <p className="text-khoj-text text-xs font-semibold truncate">{e.title}</p>
                       <div className="mt-1 w-full bg-zinc-800 rounded-full h-1">
                         <div className="h-1 rounded-full bg-khoj-accent" style={{ width: `${e.progressPercent}%` }} />
                       </div>
                       <p className="text-khoj-subtle text-[10px] mt-0.5">{e.progressPercent}% complete</p>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}

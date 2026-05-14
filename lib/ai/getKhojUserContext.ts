@@ -5,8 +5,8 @@ export interface KhojUserContext {
   role: string
   xp: number | null
   rank: number | null
-  completedTracks: string[]
-  inProgressTracks: string[]
+  completedRoadmapItems: string[]
+  inProgressRoadmapItems: string[]
   startupRooms: string[]
   portfolioItems: string[]
   opportunitiesApplied: string[]
@@ -23,8 +23,8 @@ const EMPTY_USER_CONTEXT: KhojUserContext = {
   role: 'user',
   xp: null,
   rank: null,
-  completedTracks: [],
-  inProgressTracks: [],
+  completedRoadmapItems: [],
+  inProgressRoadmapItems: [],
   startupRooms: [],
   portfolioItems: [],
   opportunitiesApplied: [],
@@ -84,25 +84,25 @@ export async function getKhojUserContext(userId: string): Promise<KhojUserContex
     const userData = userSnap.exists ? userSnap.data() ?? {} : {}
     const startupProfile = startupProfileSnap.exists ? startupProfileSnap.data() ?? {} : {}
 
-    const inferredCompletedTracks = Number((startupProfile as { proofSignals?: { tracksCompleted?: number } }).proofSignals?.tracksCompleted ?? 0)
-    const completedTracksFromDoc = asStringArray((userData as { completedTracks?: unknown }).completedTracks)
+    const inferredCompletedRoadmapItems = Number((startupProfile as { proofSignals?: { tracksCompleted?: number } }).proofSignals?.tracksCompleted ?? 0)
+    const completedRoadmapItemsFromDoc = asStringArray((userData as { completedTracks?: unknown }).completedTracks)
     const completedEnrollments = enrollmentsSnap.docs
       .filter((doc) => {
         const data = doc.data()
         return data.status === 'completed' || Number(data.progressPercent ?? 0) >= 100
       })
       .map((doc) => getEnrollmentLabel(doc.data(), doc.id))
-    const badgeTracks = badgesSnap.docs.map((doc) => getEnrollmentLabel(doc.data(), doc.id))
-    const completedTracks = compactUnique([
-      ...completedTracksFromDoc,
+    const badgeRoadmapItems = badgesSnap.docs.map((doc) => getEnrollmentLabel(doc.data(), doc.id))
+    const completedRoadmapItems = compactUnique([
+      ...completedRoadmapItemsFromDoc,
       ...completedEnrollments,
-      ...badgeTracks,
-      ...(completedTracksFromDoc.length === 0 && completedEnrollments.length === 0 && badgeTracks.length === 0 && inferredCompletedTracks > 0
-        ? [`${inferredCompletedTracks} tracks completed`]
+      ...badgeRoadmapItems,
+      ...(completedRoadmapItemsFromDoc.length === 0 && completedEnrollments.length === 0 && badgeRoadmapItems.length === 0 && inferredCompletedRoadmapItems > 0
+        ? [`${inferredCompletedRoadmapItems} roadmap milestones completed`]
         : []),
     ])
 
-    const inProgressTracks = enrollmentsSnap.docs
+    const inProgressRoadmapItems = enrollmentsSnap.docs
       .filter((doc) => {
         const data = doc.data()
         const progress = Number(data.progressPercent ?? 0)
@@ -140,8 +140,8 @@ export async function getKhojUserContext(userId: string): Promise<KhojUserContex
       role: asString((userData as { role?: unknown }).role) || 'user',
       xp: asNumber((userData as { xp?: unknown }).xp),
       rank: asNumber((userData as { rank?: unknown }).rank),
-      completedTracks,
-      inProgressTracks,
+      completedRoadmapItems,
+      inProgressRoadmapItems,
       startupRooms,
       portfolioItems: asStringArray((userData as { portfolioItems?: unknown }).portfolioItems),
       opportunitiesApplied: asStringArray((userData as { opportunitiesApplied?: unknown }).opportunitiesApplied),

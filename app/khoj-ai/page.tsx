@@ -9,7 +9,7 @@ export default function KhojAIPage() {
       <div className="animate-slide-up pb-8">
         <KhojAssistantChat
           title="KHOJ AI"
-          subtitle="Your startup coach and learning assistant for Proof Tracks, Startup Rooms, Opportunity Market, and practical execution."
+          subtitle="Your startup coach and learning assistant for My Growth Roadmap, Startup Rooms, Jobs, and practical execution."
           initialMode="startup"
         />
       </div>

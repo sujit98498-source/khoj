@@ -14,10 +14,10 @@ interface DashboardHeroProps {
 }
 
 const QUICK_ACTIONS = [
+  { icon: '▶', label: 'Explore Arena',       href: '/arena',   accent: false },
   { icon: '▶', label: 'Upload Video',        href: '/studio',  accent: false },
-  { icon: '⬤', label: 'Go Live',             href: '/streams', accent: false },
   { icon: '◈', label: 'Startup Room',         href: '/rooms',   accent: false },
-  { icon: '◫', label: 'Start Track',          href: '/tracks',  accent: true  },
+  { icon: '◫', label: 'Growth Roadmap',       href: '/khoj-ai', accent: true  },
 ] as const
 
 export function DashboardHero({ user }: DashboardHeroProps) {

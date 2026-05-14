@@ -14,20 +14,20 @@ import { XPBar } from '@/components/ui/XPBar'
 // ── Nav section definitions ───────────────────────────────────────────────────
 
 const MAIN_NAV = [
+  { href: '/khoj-ai',      label: 'KHOJ AI',      icon: '⚡' },
   { href: '/dashboard',    label: 'Dashboard',    icon: '⬡' },
   { href: '/arena',        label: 'Arena',        icon: '▶' },
-  { href: '/tracks',       label: 'Tracks',       icon: '◫' },
-  { href: '/rooms',        label: 'Rooms',        icon: '▣' },
-  { href: '/khoj-ai',      label: 'KHOJ AI',      icon: '⚡' },
-  { href: '/studio',       label: 'Studio',       icon: '🎬' },
-  { href: '/jobs',         label: 'Opportunity Market', icon: '◉' },
+  { href: '/community',    label: 'Community',    icon: '◎' },
   { href: '/tournaments',  label: 'Tournaments',  icon: '◈' },
   { href: '/leaderboard',  label: 'Leaderboard',  icon: '▲' },
-  { href: '/messages',     label: 'Messages',     icon: '✉' },
+  { href: '/jobs',         label: 'Jobs',         icon: '◉' },
+  { href: '/rooms',        label: 'Rooms',        icon: '▣' },
+  { href: '/studio',       label: 'Studio',       icon: '🎬' },
 ]
 
 const PERSONAL_NAV = [
   { href: '/profile',          label: 'Profile',       icon: '◎' },
+  { href: '/messages',         label: 'Messages',      icon: '✉' },
   { href: '/notifications',    label: 'Notifications', icon: '◬' },
   { href: '/settings/profile', label: 'Settings',      icon: '✎' },
 ]
@@ -98,10 +98,10 @@ export function Sidebar() {
 
   function isActive(href: string) {
     if (href === '/dashboard' || href === '/jobs' || href === '/rooms' ||
-        href === '/messages' || href === '/leaderboard' ||
+        href === '/messages' || href === '/leaderboard' || href === '/community' ||
         href === '/admin' ||
-        href === '/arena' || href === '/profile' || href === '/notifications' ||
-        href === '/khoj-ai') {
+        href === '/profile' || href === '/notifications' ||
+        href === '/khoj-ai' || href === '/arena' || href === '/studio') {
       return pathname === href || pathname.startsWith(href + '/')
     }
     return pathname === href || pathname.startsWith(href + '/')

@@ -23,8 +23,8 @@ const TYPE_CONFIG: Record<
     bg: 'bg-khoj-accent/10 border-khoj-accent/30',
     icon: '◈',
   },
-  Track: {
-    label: 'Track',
+  Progress: {
+    label: 'Progress',
     color: 'text-khoj-teal',
     bg: 'bg-khoj-teal/10 border-khoj-teal/30',
     icon: '◫',
@@ -57,7 +57,7 @@ const TYPE_CONFIG: Record<
 
 const CTA_LABELS: Record<FeedItemType, string> = {
   Startup: 'View Startup Room',
-  Track: 'View Track',
+  Progress: 'Open KHOJ AI',
   Opportunity: 'View Opportunity',
   Achievement: 'View Profile',
   Arena: 'Watch Video',

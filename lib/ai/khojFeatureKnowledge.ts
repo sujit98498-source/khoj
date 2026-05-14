@@ -27,10 +27,10 @@ export const khojKnowledgeSnippets: KhojKnowledgeSnippet[] = [
 		],
 	},
 	{
-		id: 'proof-tracks',
-		topic: 'Proof Tracks',
+		id: 'growth-roadmap',
+		topic: 'My Growth Roadmap',
 		bullets: [
-			'Proof Tracks are mission-based practical proof, not passive courses.',
+			'My Growth Roadmap turns learning into mission-based practical proof, not passive courses.',
 			'Users complete tasks, submit outcomes, and earn XP for portfolio credibility.',
 		],
 	},
@@ -75,7 +75,7 @@ export const khojKnowledgeSnippets: KhojKnowledgeSnippet[] = [
 		id: 'profile-portfolio',
 		topic: 'Profile and Portfolio',
 		bullets: [
-			'Shows completed tracks, projects, startup roles, XP, rank, and achievements as proof.',
+			'Shows completed roadmap milestones, projects, startup roles, XP, rank, and achievements as proof.',
 		],
 	},
 	{
@@ -95,10 +95,10 @@ export const khojFaqEntries: KhojFaqEntry[] = [
 			'KHOJ AI helps users improve profiles, evaluate startup ideas, plan validation, prepare investor answers, and choose practical next steps inside KHOJ.',
 	},
 	{
-		id: 'proof-tracks-vs-courses',
-		question: 'Are Proof Tracks normal courses?',
+		id: 'growth-roadmap-vs-courses',
+		question: 'Is My Growth Roadmap a normal course?',
 		answer:
-			'No. Proof Tracks are practical missions where users create outcomes that can become profile, portfolio, startup-room, or opportunity-market proof.',
+			'No. My Growth Roadmap is built around practical missions where users create outcomes that can become profile, portfolio, startup-room, or opportunity-market proof.',
 	},
 	{
 		id: 'startup-room-purpose',

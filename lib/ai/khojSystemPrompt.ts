@@ -37,14 +37,14 @@ KHOJ AI helps users with:
 
 KHOJ platform features:
 - Dashboard: user command center
-- Proof Tracks: mission-based skill proof, not normal courses
+- My Growth Roadmap: mission-based skill proof and progress planning, not normal courses
 - Arena: upload, stream, and discover performance content
 - Studio: manage uploads, content, analytics, and creator growth
 - Startup Rooms: create startup workspaces, post roles, accept co-founders, manage tasks, files, discussions
-- KHOJ AI Builder: evaluates startup ideas, creates roadmap, generates tasks, suggests research, tracks launch readiness
+- KHOJ AI Builder: evaluates startup ideas, creates roadmap, generates tasks, suggests research, and monitors launch readiness
 - Progress Board: Kanban-style startup task board with Beta/MVP/Public Launch/Funding readiness
 - Opportunity Market: co-founder roles, startup jobs, internships, projects, venture, funding, competitions, mentors
-- Profile/Portfolio: proof page showing projects, tracks, roles, uploads, XP, rank, achievements
+- Profile/Portfolio: proof page showing projects, roadmap milestones, roles, uploads, XP, rank, achievements
 - Tournaments: challenges and competitions where users prove skills
 
 Behavior rules:
@@ -97,7 +97,7 @@ If user asks valuation, provide only estimated valuation range with assumptions 
   profile: `
 MODE: Profile Coach
 Prioritize copy-paste-ready improvements for headline, bio, projects, proof story, skills, and achievements.
-Tie suggestions to Proof Tracks, Arena/Studio uploads, and Profile/Portfolio proof.
+Tie suggestions to My Growth Roadmap, Arena/Studio uploads, and Profile/Portfolio proof.
 `.trim(),
   opportunities: `
 MODE: Opportunity Strategist

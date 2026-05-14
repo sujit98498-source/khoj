@@ -6,7 +6,9 @@ export interface KhojUser {
   uid: string
   name: string
   email: string
-  role?: 'admin' | 'user' // optional for legacy docs; new users default to 'user'
+  role?: 'admin' | 'founder' | 'ceo' | 'user' // optional for legacy docs; new users default to 'user'
+  /** Legacy admin flag supported by the admin guard */
+  isAdmin?: boolean
   /** Optional profile photo — stored in Firestore when user updates their profile */
   avatarUrl?: string
   /** Optional @handle */

@@ -18,6 +18,14 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const hasAuthCookie = request.cookies.get('khoj-auth')?.value === '1'
 
+  if (pathname === '/tracks' || pathname.startsWith('/tracks/')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  if (pathname === '/studio/tracks' || pathname.startsWith('/studio/tracks/')) {
+    return NextResponse.redirect(new URL('/studio', request.url))
+  }
+
   const isProtectedRoute = PROTECTED_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   )
@@ -50,6 +58,8 @@ export const config = {
     '/rooms/:path*',
     '/profile/:path*',
     '/admin/:path*',
+    '/tracks/:path*',
+    '/studio/tracks/:path*',
     '/auth/login',
     '/auth/signup',
   ],

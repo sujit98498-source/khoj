@@ -48,6 +48,7 @@ function detectToolType(message: string, mode: KhojMode): ToolPromptType | 'gene
   if (text.includes('competitor')) return 'competitor_analysis'
   if (text.includes('market')) return 'market_analysis'
   if (text.includes('roadmap') || text.includes('launch plan')) return 'roadmap_builder'
+  if (text.includes('reel') || text.includes('content calendar') || text.includes('beta launch post') || text.includes('founder story') || text.includes('growth content') || text.includes('marketing')) return 'growth_content'
   if (text.includes('task') || text.includes('to-do') || text.includes('todo')) return 'task_generator'
   if (text.includes('investor') || text.includes('q&a') || text.includes('funding')) return 'investor_qna'
   if (text.includes('profile') || text.includes('headline') || text.includes('bio') || text.includes('portfolio')) return 'profile_coach'
@@ -293,6 +294,58 @@ function buildReply(toolType: ToolPromptType | 'general', message: string, mode:
       '',
       '### Confident Closing',
       '- We are building a validation-first operating loop and can show measurable progression from proof to opportunity outcomes.',
+    ].join('\n')
+  }
+
+  if (toolType === 'growth_content') {
+    return [
+      '## Content goal',
+      'Create founder-led private beta demand for KHOJ by showing how builders move from profile proof to Startup Rooms, roles, and opportunities.',
+      '',
+      '## Target audience',
+      'Student founders, developers, designers, marketers, creators, mentors, and early startup teammates looking for serious collaboration.',
+      '',
+      '## Validated idea score /10',
+      '8.1/10 - Clear KHOJ relevance, strong target audience fit, and practical CTA. Improve with one concrete proof example from a beta user.',
+      '',
+      '## Hook',
+      'Most builders do not need another social profile. They need proof that turns into a team and an opportunity.',
+      '',
+      '## 30-second script',
+      '0-5s: "If you are building alone, your next teammate may already be one proof post away."',
+      '5-12s: Show KHOJ profile, skills, and project proof.',
+      '12-20s: Show Startup Room roles and Opportunity Market.',
+      '20-27s: Show KHOJ AI turning an idea into a practical next step.',
+      '27-30s: "Join the KHOJ private beta and build with people who are already moving."',
+      '',
+      '## Scene-by-scene shot list',
+      '1. Screen recording of a KHOJ profile with skills and projects.',
+      '2. Quick cut to a Startup Room role card.',
+      '3. Founder typing a request into KHOJ AI.',
+      '4. Opportunity Market card with collaborator-focused copy.',
+      '5. Closing shot with beta invitation.',
+      '',
+      '## Text overlays',
+      '- Proof beats empty profiles',
+      '- Find builders by skill',
+      '- Create Startup Rooms',
+      '- Turn roles into opportunities',
+      '- Private beta now open',
+      '',
+      '## Caption',
+      'KHOJ helps builders turn proof into teams, startup rooms, and real opportunities. If you are a founder, developer, designer, marketer, or creator looking for serious collaborators, the private beta is for you.',
+      '',
+      '## Hashtags',
+      '#KHOJ #StartupBuilders #StudentFounders #BuildInPublic #FounderJourney #StartupCommunity',
+      '',
+      '## CTA',
+      'Join the KHOJ private beta and create your builder profile today.',
+      '',
+      '## Final recommendation',
+      'Approve',
+      '',
+      '## Posting suggestion',
+      'Post as a short reel with screen recordings, founder voiceover, and a pinned comment inviting beta testers.',
     ].join('\n')
   }
 

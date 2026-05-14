@@ -15,20 +15,18 @@ import type { UserRoomMembership } from '@/types/collaboration'
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
-type FeedTab = 'for-you' | 'following' | 'startups' | 'tracks' | 'opportunities' | 'achievements'
+type FeedTab = 'for-you' | 'following' | 'startups' | 'opportunities' | 'achievements'
 
 const TABS: { id: FeedTab; label: string }[] = [
   { id: 'for-you',       label: 'For You' },
   { id: 'following',     label: 'Following' },
   { id: 'startups',      label: 'Startups' },
-  { id: 'tracks',        label: 'Tracks' },
   { id: 'opportunities', label: 'Opportunities' },
   { id: 'achievements',  label: 'Achievements' },
 ]
 
 const TAB_TYPES: Partial<Record<FeedTab, FeedItemType[]>> = {
   startups:      ['Startup'],
-  tracks:        ['Track'],
   opportunities: ['Opportunity'],
   achievements:  ['Achievement'],
 }
@@ -51,7 +49,6 @@ const EMPTY_MESSAGES: Record<FeedTab, string> = {
   'for-you':       'No activity yet.',
   'following':     'Follow creators, founders, and builders to see their posts here.',
   'startups':      'No startup updates yet.',
-  'tracks':        'No track activity yet.',
   'opportunities': 'No opportunities posted yet.',
   'achievements':  'No achievements shared yet.',
 }
@@ -66,8 +63,8 @@ function FeedEmpty({ tab }: { tab: FeedTab }) {
         <Link href="/arena">
           <Button variant="secondary" size="sm">Explore Arena</Button>
         </Link>
-        <Link href="/tracks">
-          <Button variant="secondary" size="sm">Join a Track</Button>
+        <Link href="/khoj-ai">
+          <Button variant="secondary" size="sm">Open KHOJ AI</Button>
         </Link>
         <Link href="/rooms">
           <Button size="sm">Create Startup Room</Button>

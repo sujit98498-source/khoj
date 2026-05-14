@@ -21,8 +21,25 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isSignedIn() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'ADMIN', 'Admin']
+      );
+    }
+
+    function isGrowthAdmin() {
+      return isSignedIn() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in [
+          'admin', 'ADMIN', 'Admin',
+          'founder', 'FOUNDER', 'Founder',
+          'ceo', 'CEO', 'Ceo'
+        ]
+      );
+    }
+
+    function isGrowthContentStatus(status) {
+      return status in ['draft', 'approved', 'posted'];
     }
 
     // ── Users ───────────────────────────────────────────────────────────
@@ -103,6 +120,42 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow update, delete: if isSignedIn() &&
         (isOwner(resource.data.recruiterId) || isAdmin());
+    }
+
+    // ── Project/service marketplace ──────────────────────────────────────
+    match /services/{serviceId} {
+      allow read: if resource.data.status != 'deleted';
+      allow create: if isSignedIn() && isOwner(request.resource.data.ownerId);
+      allow update, delete: if isSignedIn() &&
+        (
+          (isOwner(resource.data.ownerId) && request.resource.data.ownerId == resource.data.ownerId) ||
+          isAdmin()
+        );
+    }
+
+    match /projects/{projectId} {
+      allow read: if resource.data.status != 'deleted';
+      allow create: if isSignedIn() && isOwner(request.resource.data.clientId);
+      allow update, delete: if isSignedIn() &&
+        (
+          (isOwner(resource.data.clientId) && request.resource.data.clientId == resource.data.clientId) ||
+          isAdmin()
+        );
+    }
+
+    match /proposals/{proposalId} {
+      allow read: if isSignedIn() && (
+        isOwner(resource.data.freelancerId) ||
+        isOwner(get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.clientId) ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && isOwner(request.resource.data.freelancerId);
+      allow update: if isSignedIn() && (
+        isOwner(resource.data.freelancerId) ||
+        isOwner(get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.clientId) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     // ── Job applications ──────────────────────────────────────────────────
@@ -572,6 +625,18 @@ service cloud.firestore {
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
       // All writes are server-side via API + Admin SDK.
       allow write: if false;
+    }
+
+    // ── Internal Growth Studio content ideas ─────────────────────────────
+    match /growthContentIdeas/{ideaId} {
+      allow read: if isGrowthAdmin();
+      allow create: if isGrowthAdmin() &&
+        request.resource.data.createdBy == request.auth.uid &&
+        isGrowthContentStatus(request.resource.data.status);
+      allow update: if isGrowthAdmin() &&
+        isGrowthContentStatus(request.resource.data.status) &&
+        request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if isGrowthAdmin();
     }
 
   }

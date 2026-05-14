@@ -18,42 +18,56 @@ const ADMIN_NAV = [
     label: 'Overview',
     icon: '⬢',
     description: 'Admin home',
+    adminOnly: true,
+  },
+  {
+    href: '/admin/growth-studio',
+    label: 'Growth Studio',
+    icon: '✦',
+    description: 'Marketing agent',
   },
   {
     href: '/admin/tournaments',
     label: 'Tournaments',
     icon: '◈',
     description: 'Create & manage',
+    adminOnly: true,
   },
   {
     href: '/admin/announcements',
     label: 'Announcements',
     icon: '◉',
     description: 'Broadcast to users',
+    adminOnly: true,
   },
   {
     href: '/admin/results',
     label: 'Results',
     icon: '▲',
     description: 'Publish & award XP',
+    adminOnly: true,
   },
   {
     href: '/admin/reports',
     label: 'Reported Posts',
     icon: '⚑',
     description: 'Community moderation',
+    adminOnly: true,
   },
   {
     href: '/admin/verification',
     label: 'Payments & Payouts',
     icon: '₹',
     description: 'Finance dashboard',
+    adminOnly: true,
   },
 ]
 
 export function AdminSidebar({ adminUser }: AdminSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const isFullAdmin = adminUser.role === 'admin'
+  const navItems = ADMIN_NAV.filter((item) => !item.adminOnly || isFullAdmin)
 
   const handleLogout = async () => {
     document.cookie = 'khoj-auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
@@ -91,7 +105,7 @@ export function AdminSidebar({ adminUser }: AdminSidebarProps) {
             <p className="text-sm font-body font-semibold text-khoj-text truncate">{adminUser.name}</p>
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-khoj-accent/10 border border-khoj-accent/20">
               <span className="text-[9px] uppercase tracking-widest text-khoj-accent font-body font-bold">
-                Admin
+                {(adminUser.role ?? 'admin').toUpperCase()}
               </span>
             </span>
           </div>
@@ -102,7 +116,7 @@ export function AdminSidebar({ adminUser }: AdminSidebarProps) {
         <p className="text-[9px] uppercase tracking-[0.15em] text-khoj-muted font-body px-3 mb-3">
           Management
         </p>
-        {ADMIN_NAV.map((item) => {
+        {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           return (
             <Link

@@ -7,6 +7,7 @@ import clsx from 'clsx'
 const TOP_NAV_ITEMS = [
   { href: '/khoj-ai', label: 'KHOJ AI' },
   { href: '/dashboard', label: 'Dashboard' },
+  { href: '/arena', label: 'Arena' },
   { href: '/community', label: 'Community' },
   { href: '/tournaments', label: 'Tournaments' },
   { href: '/leaderboard', label: 'Leaderboard' },

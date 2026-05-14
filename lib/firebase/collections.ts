@@ -14,6 +14,10 @@ export const COLLECTIONS = {
   COMMUNITY_REPORTS: 'communityReports',
   ROOM_MESSAGES: 'roomMessages',
   JOBS: 'jobs',
+  SERVICES: 'services',
+  PROJECTS: 'projects',
+  PROPOSALS: 'proposals',
+  SAVED_JOBS: 'savedJobs',
   OPPORTUNITIES: 'opportunities',
   PAYMENTS: 'payments',
   PAYOUTS: 'payouts',
@@ -24,6 +28,7 @@ export const COLLECTIONS = {
   CALLS: 'calls',
   // AI
   STARTUP_EVALUATIONS: 'startupEvaluations',
+  GROWTH_CONTENT_IDEAS: 'growthContentIdeas',
 } as const
 
 // Subcollection helpers

@@ -246,7 +246,7 @@ export function FounderInboxPanel({ roomId, roomTitle, currentUserId, requests, 
                     <p className="text-[10px] text-khoj-subtle uppercase tracking-wide mb-2">KHOJ Proof Summary</p>
                     <div className="flex gap-4 text-xs text-khoj-subtle/70">
                       <span>⚡ XP — </span>
-                      <span>📚 Tracks — </span>
+                      <span>📚 Progress — </span>
                       <span>🗂 Portfolio items — </span>
                     </div>
                     <p className="text-[10px] text-khoj-subtle/40 mt-1 italic">

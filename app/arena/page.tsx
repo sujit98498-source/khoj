@@ -102,7 +102,7 @@ export default function ArenaPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">Arena</h1>
-            <p className="text-zinc-500 text-sm mt-1">Discover live streams, videos, clips, and creators</p>
+            <p className="text-zinc-500 text-sm mt-1">Discover talent, live streams, videos, clips, and performance highlights.</p>
           </div>
           <CreateDropdown
             onUploadVideo={() => handleCreate('video')}
@@ -119,7 +119,7 @@ export default function ArenaPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search streams, videos, creators..."
+            placeholder="Search creators, clips, skills..."
             className="w-full bg-[#101218] border border-zinc-800 text-white text-sm placeholder-zinc-600 rounded-xl pl-10 pr-10 py-2.5 outline-none focus:border-[#ff5a00]/50 focus:ring-1 focus:ring-[#ff5a00]/20 transition-all"
           />
           {searchQuery && (

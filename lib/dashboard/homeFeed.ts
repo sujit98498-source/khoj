@@ -4,7 +4,7 @@
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type FeedItemType = 'Startup' | 'Track' | 'Opportunity' | 'Achievement' | 'Arena' | 'Project'
+export type FeedItemType = 'Startup' | 'Progress' | 'Opportunity' | 'Achievement' | 'Arena' | 'Project'
 
 export interface FeedItem {
   id: string
@@ -32,7 +32,7 @@ export interface FeedItem {
 //
 // Firebase collection map:
 //   Startup     → lib/collaboration/roomQueries  (startup rooms & co-founder requests)
-//   Track       → services/trackService          (enrollments & completions)
+//   Progress    → growth roadmap progress signals
 //   Opportunity → services/jobService + services/tournamentService
 //   Achievement → services/tournamentService (publishTournamentResult), leaderboard
 //   Arena       → services/mediaService          (uploaded videos)
@@ -69,17 +69,17 @@ export const PLACEHOLDER_FEED: FeedItem[] = [
     likes: 87,
     comments: 23,
   },
-  // ── Track (connect: subscribeAllEnrollments — trackService) ──────────────
+  // ── Progress ─────────────────────────────────────────────────────────────
   {
     id: 'feed-3',
-    type: 'Track',
+    type: 'Progress',
     authorId: 'user-sujit',
     authorName: 'Sujit Karki',
     authorRole: 'Frontend Developer',
     content:
-      'Just completed the Frontend Developer Track — 12 lessons, 4 projects, 3 months of consistent effort. Next: building my public portfolio with every project from this track.',
-    relatedTitle: 'Frontend Developer Track',
-    relatedUrl: '/tracks',
+      'Just completed a Frontend Developer growth roadmap milestone — 12 lessons, 4 projects, 3 months of consistent effort. Next: building my public portfolio with every project from this roadmap.',
+    relatedTitle: 'Frontend Developer Roadmap',
+    relatedUrl: '/khoj-ai',
     timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
     likes: 62,
     comments: 18,
@@ -145,17 +145,17 @@ export const PLACEHOLDER_FEED: FeedItem[] = [
     likes: 175,
     comments: 44,
   },
-  // ── Track ─────────────────────────────────────────────────────────────────
+  // ── Progress ─────────────────────────────────────────────────────────────
   {
     id: 'feed-8',
-    type: 'Track',
+    type: 'Progress',
     authorId: 'user-meera',
     authorName: 'Meera Pillai',
     authorRole: 'UI/UX Designer',
     content:
-      'Started the Design Systems Track today. Already on lesson 3. The breakdown of component architecture in Figma + token setup is exactly what I was missing.',
-    relatedTitle: 'Design Systems Track',
-    relatedUrl: '/tracks',
+      'Started a Design Systems growth roadmap today. Already on lesson 3. The breakdown of component architecture in Figma + token setup is exactly what I was missing.',
+    relatedTitle: 'Design Systems Roadmap',
+    relatedUrl: '/khoj-ai',
     timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
     likes: 31,
     comments: 9,
@@ -183,7 +183,7 @@ export const PLACEHOLDER_FEED: FeedItem[] = [
     authorName: 'Preethi Rajan',
     authorRole: 'DSA Specialist',
     content:
-      'Won the DSA Championship — solved all 5 problems in under 90 minutes. Six months ago I was struggling with arrays. KHOJ tracks + daily challenges made the difference.',
+      'Won the DSA Championship — solved all 5 problems in under 90 minutes. Six months ago I was struggling with arrays. KHOJ practice milestones + daily challenges made the difference.',
     relatedTitle: 'DSA Championship',
     relatedUrl: '/tournaments',
     timestamp: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),

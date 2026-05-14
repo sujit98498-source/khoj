@@ -37,8 +37,8 @@ const DEFAULT_STEPS: Record<KhojMode, NextStepSuggestion[]> = {
     },
     {
       label: 'Attach one mission outcome to your profile',
-      khojFeature: 'Proof Tracks',
-      reason: 'Track outcomes provide concrete evidence of capability.',
+      khojFeature: 'My Growth Roadmap',
+      reason: 'Roadmap outcomes provide concrete evidence of capability.',
     },
   ],
   opportunities: [

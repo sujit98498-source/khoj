@@ -6,19 +6,29 @@ import { doc, getDoc } from 'firebase/firestore'
 import { auth, requireFirestoreDb } from '@/lib/firebase/config'
 import { COLLECTIONS } from '@/lib/firebase/collections'
 import { KhojUser } from '@/lib/types'
+import {
+  hasAllowedAdminRole,
+  normalizeAdminRole,
+  resolveAdminRole,
+  type AdminAllowedRole,
+} from '@/lib/admin/roles'
 
 export type AdminGuardStatus = 'loading' | 'authorized' | 'unauthorized'
+
+const DEFAULT_ALLOWED_ROLES: AdminAllowedRole[] = ['admin']
 
 export interface AdminGuardState {
   status: AdminGuardStatus
   user: KhojUser | null
 }
 
-export function useAdminGuard(): AdminGuardState {
+export function useAdminGuard(allowedRoles: AdminAllowedRole[] = DEFAULT_ALLOWED_ROLES): AdminGuardState {
   const [state, setState] = useState<AdminGuardState>({
     status: 'loading',
     user: null,
   })
+
+  const allowedRolesKey = allowedRoles.join('|')
 
   useEffect(() => {
     let isActive = true
@@ -57,11 +67,16 @@ export function useAdminGuard(): AdminGuardState {
         }
 
         const rawData = userSnap.data() as Partial<KhojUser>
+        const resolvedRole = resolveAdminRole(rawData)
+        const normalizedRole = normalizeAdminRole(rawData.role)
+        const role = resolvedRole ?? (normalizedRole === 'user' ? 'user' : undefined)
+        const isAllowed = hasAllowedAdminRole(rawData, allowedRoles)
         const userData: KhojUser = {
           uid: user.uid,
           name: rawData.name ?? user.displayName ?? 'Admin User',
           email: rawData.email ?? user.email ?? '',
-          role: rawData.role,
+          role,
+          isAdmin: rawData.isAdmin === true,
           xp: rawData.xp ?? 0,
           rank: rawData.rank ?? 0,
           wins: rawData.wins ?? 0,
@@ -74,7 +89,16 @@ export function useAdminGuard(): AdminGuardState {
         console.log('User Data:', userData)
         console.log('Role:', userData?.role)
 
-        if (userData.role === 'admin') {
+        if (allowedRoles.includes('founder') && allowedRoles.includes('ceo')) {
+          console.log('Growth Studio role check', {
+            uid: user.uid,
+            email: user.email ?? userData.email,
+            role: rawData.role ?? (rawData.isAdmin === true ? 'isAdmin:true' : undefined),
+            isAllowed,
+          })
+        }
+
+        if (isAllowed) {
           setState({ status: 'authorized', user: userData })
           return
         }
@@ -92,7 +116,7 @@ export function useAdminGuard(): AdminGuardState {
       isActive = false
       unsubscribe()
     }
-  }, [])
+  }, [allowedRoles, allowedRolesKey])
 
   return state
 }
