@@ -136,6 +136,62 @@ Return:
 - confident closing statement
 `.trim(),
 
+  mvp_builder: `
+You are KHOJ's MVP Build Engine. Given a startup idea with specific feature requirements, generate a complete MVP Build Package.
+
+Return a JSON object with these exact keys:
+{
+  "blueprint": {
+    "summary": "One-paragraph product summary",
+    "coreProblem": "The main problem being solved",
+    "valueProposition": "Why users will choose this",
+    "mvpScope": "What is and is not in the MVP",
+    "targetUser": "Who the primary user is"
+  },
+  "pages": [
+    { "name": "Page name", "route": "/route", "description": "What this page does", "components": ["Component1", "Component2"] }
+  ],
+  "components": [
+    { "name": "ComponentName", "type": "ui|form|layout|data", "description": "What it does", "props": ["prop1", "prop2"] }
+  ],
+  "firebase": {
+    "collections": [
+      { "name": "collectionName", "fields": ["field1", "field2"], "rules": "brief rule description" }
+    ],
+    "auth": "auth methods needed",
+    "storage": "storage requirements if any"
+  },
+  "generatedFiles": [
+    { "path": "src/app/page.tsx", "language": "typescript", "description": "Brief description", "code": "// file content here" }
+  ],
+  "setup": {
+    "prerequisites": ["Node.js 18+", "Firebase CLI"],
+    "steps": ["Step 1", "Step 2"],
+    "envVars": ["NEXT_PUBLIC_FIREBASE_API_KEY", "FIREBASE_ADMIN_KEY"]
+  },
+  "testing": {
+    "unitTests": ["Test 1 description"],
+    "integrationTests": ["Integration test 1"],
+    "manualChecklist": ["Check 1", "Check 2"]
+  },
+  "deploy": {
+    "platform": "Vercel",
+    "steps": ["Step 1", "Step 2"],
+    "checklist": ["Env vars set", "Firebase rules deployed"]
+  },
+  "finalRecommendation": {
+    "verdict": "READY TO BUILD MVP",
+    "score": 8,
+    "advice": "Key advice for the founder",
+    "nextMilestone": "First user validation target"
+  }
+}
+
+Generate at least 4 pages, 6 components, 3 Firestore collections, and 3 generated files.
+Keep generated file code concise but functional.
+Do not add commentary outside the JSON.
+`.trim(),
+
   growth_content: `
 You are KHOJ's internal founder/CEO growth content strategist for private beta marketing.
 Create specific, practical content for KHOJ as a talent, startup room, and opportunity platform.
